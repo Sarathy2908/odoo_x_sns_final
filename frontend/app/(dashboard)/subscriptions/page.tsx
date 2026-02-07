@@ -92,26 +92,28 @@ export default function SubscriptionsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Subscriptions</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900">Subscriptions</h1>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowPlanModal(true)}
-            className="btn-secondary"
+            className="btn-secondary text-xs sm:text-sm"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            Add Plan
+            <span className="hidden sm:inline">Add Plan</span>
+            <span className="sm:hidden">Plan</span>
           </button>
           <button
             onClick={() => router.push('/subscriptions/new')}
-            className="btn-primary"
+            className="btn-primary text-xs sm:text-sm"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            New Subscription
+            <span className="hidden sm:inline">New Subscription</span>
+            <span className="sm:hidden">New</span>
           </button>
         </div>
       </div>
@@ -240,11 +242,11 @@ export default function SubscriptionsPage() {
 
       {/* Summary Footer */}
       {filteredSubscriptions.length > 0 && (
-        <div className="flex items-center justify-between text-sm text-gray-500 px-1">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-sm text-gray-500 px-1">
           <span>
             Showing {filteredSubscriptions.length} of {subscriptions.length} subscription{subscriptions.length !== 1 ? 's' : ''}
           </span>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 flex-wrap">
             {Object.entries(statusCounts).map(([status, count]) => (
               <span key={status} className="flex items-center gap-1.5">
                 <StatusBadge status={status} />

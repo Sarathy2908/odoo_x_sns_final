@@ -70,7 +70,7 @@ export default function PortalCatalog() {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-2xl font-bold text-gray-900">Products</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Products</h1>
 
             {/* Toast */}
             {toast && (
@@ -121,7 +121,7 @@ export default function PortalCatalog() {
             ) : products.length === 0 ? (
                 <div className="text-center py-20 text-gray-400">No products found.</div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                     {products.map((product: any) => (
                         <div key={product.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow flex flex-col">
                             <div className="p-5 flex-1">

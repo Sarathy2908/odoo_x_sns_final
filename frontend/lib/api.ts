@@ -74,7 +74,7 @@ export const authAPI = {
     }),
     requestPasswordReset: (email: string) => apiRequest('/auth/reset-password-request', {
         method: 'POST',
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, frontendUrl: window.location.origin }),
     }),
     resetPassword: (token: string, newPassword: string) => apiRequest('/auth/reset-password', {
         method: 'POST',
@@ -222,6 +222,10 @@ export const taxesAPI = {
         body: JSON.stringify(data),
     }),
     suggest: (data: any) => apiRequest('/taxes/suggest', {
+        method: 'POST',
+        body: JSON.stringify(data),
+    }),
+    suggestAI: (data: { taxName: string; country: string; state?: string }) => apiRequest('/taxes/suggest-ai', {
         method: 'POST',
         body: JSON.stringify(data),
     }),

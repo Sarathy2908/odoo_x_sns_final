@@ -13,7 +13,7 @@ export default function PortalConfirmation() {
                     </svg>
                 </div>
 
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">Order Confirmed!</h1>
+                <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">Order Confirmed!</h1>
                 <p className="text-gray-500 mb-8">
                     Your subscription order has been placed successfully. You will receive a confirmation email shortly with the details of your subscription.
                 </p>

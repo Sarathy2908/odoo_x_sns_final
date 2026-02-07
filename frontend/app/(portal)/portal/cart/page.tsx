@@ -41,7 +41,7 @@ export default function PortalCart() {
 
     return (
         <div className="space-y-6 max-w-3xl">
-            <h1 className="text-2xl font-bold text-gray-900">Shopping Cart</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Shopping Cart</h1>
 
             {items.length === 0 ? (
                 <div className="text-center py-20">

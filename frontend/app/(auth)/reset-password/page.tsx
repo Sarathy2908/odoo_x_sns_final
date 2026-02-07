@@ -38,9 +38,9 @@ function ResetPasswordForm() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[#F0EEEF]">
+        <div className="min-h-screen flex items-center justify-center bg-[#F0EEEF] px-4">
             <div className="w-full max-w-sm">
-                <div className="text-center mb-8">
+                <div className="text-center mb-6 sm:mb-8">
                     <h1 className="text-2xl font-bold text-gray-900">{token ? 'Set New Password' : 'Reset Password'}</h1>
                     <p className="text-sm text-gray-500 mt-1">{token ? 'Enter your new password' : 'Enter your email to receive a reset link'}</p>
                 </div>

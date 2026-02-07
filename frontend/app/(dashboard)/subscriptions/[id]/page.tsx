@@ -184,22 +184,22 @@ export default function SubscriptionDetailPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-4">
         <button onClick={() => router.back()} className="btn-secondary btn-sm">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Back
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">
-          Subscription {subscription.subscriptionNumber}
+        <h1 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">
+          <span className="hidden sm:inline">Subscription </span>{subscription.subscriptionNumber}
         </h1>
         <StatusBadge status={subscription.status} />
       </div>
 
       {/* Subscription Info Card */}
-      <div className="card p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="card p-4 md:p-6">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           <div>
             <p className="text-sm text-gray-500">Customer</p>
             <p className="font-medium text-gray-900">{subscription.customer?.name || '-'}</p>
@@ -263,7 +263,7 @@ export default function SubscriptionDetailPage() {
         )}
 
         {/* Status Action Buttons */}
-        <div className="mt-6 pt-4 border-t border-gray-200 flex items-center gap-3">
+        <div className="mt-4 md:mt-6 pt-4 border-t border-gray-200 flex flex-wrap items-center gap-2 sm:gap-3">
           {statusActions.map((action) => (
             <button
               key={action.status}
@@ -287,8 +287,8 @@ export default function SubscriptionDetailPage() {
       </div>
 
       {/* Subscription Lines */}
-      <div className="card p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Subscription Lines</h2>
+      <div className="card p-4 md:p-6">
+        <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4">Subscription Lines</h2>
         <div className="table-container">
           <table className="data-table">
             <thead>

@@ -36,7 +36,7 @@ export default function PortalPayments() {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-2xl font-bold text-gray-900">My Payments</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">My Payments</h1>
 
             {/* Summary */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

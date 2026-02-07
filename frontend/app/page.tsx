@@ -30,24 +30,24 @@ export default function HomePage() {
     const router = useRouter();
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[#F0EEEF] py-12 px-4">
+        <div className="min-h-screen flex items-center justify-center bg-[#F0EEEF] py-8 sm:py-12 px-4">
             <div className="w-full max-w-4xl">
-                <div className="text-center mb-12">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mb-4">
-                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="text-center mb-8 sm:mb-12">
+                    <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-primary rounded-2xl mb-4">
+                        <svg className="w-7 h-7 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                         </svg>
                     </div>
-                    <h1 className="text-3xl font-bold text-gray-900">SIDAZ</h1>
-                    <p className="text-gray-500 mt-2">Subscription Management System</p>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">SIDAZ</h1>
+                    <p className="text-gray-500 mt-2 text-sm sm:text-base">Subscription Management System</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                     {roles.map((role) => (
                         <button
                             key={role.key}
                             onClick={() => router.push(`/login?role=${role.key}`)}
-                            className="card p-8 text-center cursor-pointer hover:shadow-lg hover:border-primary/30 transition-all group text-left"
+                            className="card p-5 sm:p-8 cursor-pointer hover:shadow-lg hover:border-primary/30 transition-all group text-left"
                         >
                             <div className={`inline-flex items-center justify-center w-14 h-14 ${role.color} rounded-xl mb-5`}>
                                 <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
