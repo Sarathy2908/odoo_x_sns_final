@@ -45,6 +45,14 @@ export const createPlan = async (req: AuthRequest, res: Response) => {
             return res.status(400).json({ error: 'Name, price, and billing period are required' });
         }
 
+        if (parseFloat(price) <= 0) {
+            return res.status(400).json({ error: 'Price must be greater than 0' });
+        }
+
+        if (startDate && endDate && new Date(endDate) <= new Date(startDate)) {
+            return res.status(400).json({ error: 'End date must be after start date' });
+        }
+
         const plan = await prisma.recurringPlan.create({
             data: {
                 name,

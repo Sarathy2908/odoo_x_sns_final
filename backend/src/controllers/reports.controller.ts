@@ -25,6 +25,7 @@ export const getDashboardMetrics = async (req: AuthRequest, res: Response) => {
                 ? { customerId: req.user!.id }
                 : {},
             select: {
+                invoiceDate: true,
                 totalAmount: true,
                 paidAmount: true,
                 status: true,
@@ -47,19 +48,75 @@ export const getDashboardMetrics = async (req: AuthRequest, res: Response) => {
             },
         });
 
-        // Recent payments
-        const recentPayments = await prisma.payment.count({
+        // Total payments count
+        const totalPayments = await prisma.payment.count({
             where: req.user!.role === UserRole.PORTAL_USER
                 ? { customerId: req.user!.id }
                 : {},
         });
 
+        // Total subscriptions
+        const totalSubscriptions = await prisma.subscription.count({ where });
+
+        // Subscriptions by status
+        const subscriptionsByStatus = await prisma.subscription.groupBy({
+            by: ['status'],
+            where,
+            _count: { id: true },
+        });
+
+        // Recent subscriptions (last 5)
+        const recentSubscriptions = await prisma.subscription.findMany({
+            where,
+            include: {
+                customer: { select: { name: true } },
+                plan: { select: { name: true, price: true, billingPeriod: true } },
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 5,
+        });
+
+        // Recent invoices (last 5)
+        const recentInvoices = await prisma.invoice.findMany({
+            where: req.user!.role === UserRole.PORTAL_USER
+                ? { customerId: req.user!.id }
+                : {},
+            include: {
+                customer: { select: { name: true } },
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 5,
+        });
+
+        // Monthly revenue: current month vs last month
+        const now = new Date();
+        const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+        const currentMonthInvoices = invoices.filter(
+            inv => new Date(inv.invoiceDate || now) >= currentMonthStart
+        );
+        const lastMonthInvoices = invoices.filter(
+            inv => {
+                const d = new Date(inv.invoiceDate || now);
+                return d >= lastMonthStart && d < currentMonthStart;
+            }
+        );
+
+        const currentMonthRevenue = currentMonthInvoices.reduce((sum, inv) => sum + inv.paidAmount, 0);
+        const lastMonthRevenue = lastMonthInvoices.reduce((sum, inv) => sum + inv.paidAmount, 0);
+
         res.json({
             activeSubscriptions,
+            totalSubscriptions,
             totalRevenue,
             pendingRevenue,
             overdueInvoices,
-            totalPayments: recentPayments,
+            totalPayments,
+            subscriptionsByStatus,
+            recentSubscriptions,
+            recentInvoices,
+            monthlyRevenue: { currentMonth: currentMonthRevenue, lastMonth: lastMonthRevenue },
         });
     } catch (error) {
         console.error('Get dashboard metrics error:', error);
@@ -124,6 +181,29 @@ export const getRevenueReport = async (req: AuthRequest, res: Response) => {
         res.json(monthlyRevenue);
     } catch (error) {
         console.error('Get revenue report error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+// Get overdue invoices
+export const getOverdueInvoices = async (req: AuthRequest, res: Response) => {
+    try {
+        const overdueInvoices = await prisma.invoice.findMany({
+            where: {
+                status: InvoiceStatus.CONFIRMED,
+                dueDate: {
+                    lt: new Date(),
+                },
+            },
+            include: {
+                customer: true,
+            },
+            orderBy: { dueDate: 'asc' },
+        });
+
+        res.json(overdueInvoices);
+    } catch (error) {
+        console.error('Get overdue invoices error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };

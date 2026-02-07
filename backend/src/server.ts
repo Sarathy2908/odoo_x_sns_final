@@ -15,16 +15,24 @@ import discountsRoutes from './routes/discounts.routes';
 import taxesRoutes from './routes/taxes.routes';
 import usersRoutes from './routes/users.routes';
 import reportsRoutes from './routes/reports.routes';
+import razorpayRoutes from './routes/razorpay.routes';
+import contactsRoutes from './routes/contacts.routes';
+import attributesRoutes from './routes/attributes.routes';
+import pdfRoutes from './routes/pdf.routes';
+import portalRoutes from './routes/portal.routes';
 
 // Load environment variables
 dotenv.config();
 
 const app: Application = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: [
+        process.env.FRONTEND_URL || 'http://localhost:3000',
+        'http://localhost:3001',
+    ],
     credentials: true,
 }));
 app.use(express.json());
@@ -48,6 +56,11 @@ app.use('/api/discounts', discountsRoutes);
 app.use('/api/taxes', taxesRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/razorpay', razorpayRoutes);
+app.use('/api/contacts', contactsRoutes);
+app.use('/api/attributes', attributesRoutes);
+app.use('/api/pdf', pdfRoutes);
+app.use('/api/portal', portalRoutes);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

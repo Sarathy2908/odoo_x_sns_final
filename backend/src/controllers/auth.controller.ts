@@ -80,7 +80,7 @@ export const signup = async (req: Request, res: Response) => {
         const token = jwt.sign(
             { id: user.id, email: user.email, role: user.role },
             process.env.JWT_SECRET!,
-            { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+            { expiresIn: process.env.JWT_EXPIRES_IN || '7d' } as jwt.SignOptions
         );
 
         res.status(201).json({ user, token });
@@ -97,7 +97,7 @@ export const login = async (req: Request, res: Response) => {
 
         if (!email || !password) {
             return res.status(400).json({ error: 'Email and password are required' });
-        }
+        }``
 
         // Find user
         const user = await prisma.user.findUnique({ where: { email } });
@@ -115,7 +115,7 @@ export const login = async (req: Request, res: Response) => {
         const token = jwt.sign(
             { id: user.id, email: user.email, role: user.role },
             process.env.JWT_SECRET!,
-            { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+            { expiresIn: process.env.JWT_EXPIRES_IN || '7d' } as jwt.SignOptions
         );
 
         res.json({
