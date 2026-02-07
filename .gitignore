@@ -4,3 +4,5 @@ dist/
 .env
 .env.local
 *.log
+*.json.bak
+*-firebase-adminsdk-*.json
