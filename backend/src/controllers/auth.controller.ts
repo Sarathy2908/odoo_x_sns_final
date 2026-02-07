@@ -136,7 +136,7 @@ export const login = async (req: Request, res: Response) => {
 // Request Password Reset
 export const requestPasswordReset = async (req: Request, res: Response) => {
     try {
-        const { email } = req.body;
+        const { email, frontendUrl } = req.body;
 
         if (!email) {
             return res.status(400).json({ error: 'Email is required' });
@@ -157,8 +157,9 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
             data: { resetToken, resetTokenExpiry },
         });
 
-        // Send email
-        await sendPasswordResetEmail(email, resetToken);
+        // Send email — use the frontend origin if provided, otherwise fall back to env
+        const baseUrl = frontendUrl || process.env.FRONTEND_URL || 'https://odoo-x-sns-final-gb9t.vercel.app';
+        await sendPasswordResetEmail(email, resetToken, baseUrl);
 
         res.json({ message: 'If the email exists, a reset link has been sent' });
     } catch (error) {

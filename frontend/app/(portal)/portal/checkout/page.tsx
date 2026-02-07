@@ -51,7 +51,7 @@ export default function PortalCheckout() {
         <div className="space-y-6 max-w-3xl">
             <div>
                 <Link href="/portal/cart" className="text-sm text-gray-500 hover:text-gray-700 mb-1 inline-block">← Back to cart</Link>
-                <h1 className="text-2xl font-bold text-gray-900">Checkout</h1>
+                <h1 className="text-xl md:text-2xl font-bold text-gray-900">Checkout</h1>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

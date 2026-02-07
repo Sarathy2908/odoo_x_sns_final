@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AuthRequest } from '../types';
-import { suggestTax, validateTaxRate, calculateApplicableTaxes } from '../services/ai/taxSuggestion.service';
+import { suggestTax, suggestTaxWithGemini, validateTaxRate, calculateApplicableTaxes } from '../services/ai/taxSuggestion.service';
 
 const prisma = new PrismaClient();
 
@@ -89,6 +89,28 @@ export const suggestTaxes = async (req: AuthRequest, res: Response) => {
         res.json({ suggestions });
     } catch (error) {
         console.error('Suggest taxes error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+// AI-powered tax suggestion using Gemini
+export const suggestTaxWithAI = async (req: AuthRequest, res: Response) => {
+    try {
+        const { taxName, country, state } = req.body;
+
+        if (!taxName || !country) {
+            return res.status(400).json({ error: 'Tax name and country are required' });
+        }
+
+        const suggestion = await suggestTaxWithGemini(taxName, country, state || null);
+
+        if (!suggestion) {
+            return res.status(500).json({ error: 'AI suggestion failed. Please try again.' });
+        }
+
+        res.json({ suggestion });
+    } catch (error) {
+        console.error('AI suggest tax error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };

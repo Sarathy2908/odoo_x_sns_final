@@ -75,8 +75,8 @@ export default function PortalProfile() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <h1 className="text-xl md:text-2xl font-bold text-gray-900">My Profile</h1>
                 {!editing && (
                     <button onClick={() => setEditing(true)} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                         Edit Profile
@@ -92,7 +92,7 @@ export default function PortalProfile() {
             )}
 
             {/* User Details Card */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6">
                 {/* Avatar */}
                 <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-100">
                     <div className="w-16 h-16 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xl font-bold">

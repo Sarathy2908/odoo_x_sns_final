@@ -149,7 +149,7 @@ export default function PortalPlans() {
                 onReady={() => setRazorpayLoaded(true)}
             />
 
-            <h1 className="text-2xl font-bold text-gray-900">Plans</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Plans</h1>
 
             {/* Plans Grid */}
             {plans.length === 0 ? (
@@ -160,7 +160,7 @@ export default function PortalPlans() {
                     <p className="text-gray-400">No plans available at the moment.</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {plans.map((plan: any) => (
                         <button
                             key={plan.id}

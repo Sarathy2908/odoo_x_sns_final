@@ -86,19 +86,19 @@ export default function DashboardPage() {
       </div>
 
       {/* Metric Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
         {cards.map((card, index) => (
           <div
             key={index}
-            className={`card border-l-4 ${card.borderColor} p-5`}
+            className={`card border-l-4 ${card.borderColor} p-3 md:p-5`}
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500">{card.title}</p>
-                <p className="mt-1 text-2xl font-bold text-gray-900">{card.value}</p>
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm font-medium text-gray-500 truncate">{card.title}</p>
+                <p className="mt-1 text-lg md:text-2xl font-bold text-gray-900 truncate">{card.value}</p>
               </div>
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${card.iconBg}`}>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className={`w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${card.iconBg}`}>
+                <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   {card.icon}
                 </svg>
               </div>
@@ -108,9 +108,9 @@ export default function DashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="card p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="card p-4 md:p-6">
+        <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <button
             onClick={() => router.push('/subscriptions/new')}
             className="btn-primary btn-lg justify-center"
@@ -143,8 +143,8 @@ export default function DashboardPage() {
 
       {/* Subscription Status Breakdown */}
       {statusBreakdown.length > 0 && (
-        <div className="card p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Subscription Status Breakdown</h2>
+        <div className="card p-4 md:p-6">
+          <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4">Subscription Status Breakdown</h2>
           <div className="flex flex-wrap gap-3">
             {statusBreakdown.map((item: any) => (
               <div
@@ -159,11 +159,11 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Recent Subscriptions */}
-        <div className="card p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Recent Subscriptions</h2>
+        <div className="card p-4 md:p-6">
+          <div className="flex items-center justify-between mb-3 md:mb-4">
+            <h2 className="text-base md:text-lg font-semibold text-gray-900">Recent Subscriptions</h2>
             <button
               onClick={() => router.push('/subscriptions')}
               className="text-sm text-primary hover:underline"
@@ -200,9 +200,9 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Invoices */}
-        <div className="card p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Recent Invoices</h2>
+        <div className="card p-4 md:p-6">
+          <div className="flex items-center justify-between mb-3 md:mb-4">
+            <h2 className="text-base md:text-lg font-semibold text-gray-900">Recent Invoices</h2>
             <button
               onClick={() => router.push('/invoices')}
               className="text-sm text-primary hover:underline"
@@ -241,18 +241,18 @@ export default function DashboardPage() {
 
       {/* Monthly Revenue Comparison */}
       {metrics?.monthlyRevenue && (
-        <div className="card p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Monthly Revenue</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-4 bg-emerald-50 rounded-lg">
-              <p className="text-sm text-emerald-600 font-medium">This Month</p>
-              <p className="text-2xl font-bold text-emerald-700 mt-1">
+        <div className="card p-4 md:p-6">
+          <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4">Monthly Revenue</h2>
+          <div className="grid grid-cols-2 gap-3 md:gap-4">
+            <div className="p-3 md:p-4 bg-emerald-50 rounded-lg">
+              <p className="text-xs md:text-sm text-emerald-600 font-medium">This Month</p>
+              <p className="text-lg md:text-2xl font-bold text-emerald-700 mt-1">
                 {'\u20B9'}{(metrics.monthlyRevenue.currentMonth || 0).toLocaleString('en-IN')}
               </p>
             </div>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-500 font-medium">Last Month</p>
-              <p className="text-2xl font-bold text-gray-700 mt-1">
+            <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
+              <p className="text-xs md:text-sm text-gray-500 font-medium">Last Month</p>
+              <p className="text-lg md:text-2xl font-bold text-gray-700 mt-1">
                 {'\u20B9'}{(metrics.monthlyRevenue.lastMonth || 0).toLocaleString('en-IN')}
               </p>
             </div>

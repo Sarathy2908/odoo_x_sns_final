@@ -60,14 +60,14 @@ export default function PortalSubscriptionDetail() {
                 <div>
                     <Link href="/portal/subscriptions" className="text-sm text-gray-500 hover:text-gray-700 mb-1 inline-block">← Back to subscriptions</Link>
                     <div className="flex items-center gap-3">
-                        <h1 className="text-2xl font-bold text-gray-900">{sub.subscriptionNumber}</h1>
+                        <h1 className="text-xl md:text-2xl font-bold text-gray-900">{sub.subscriptionNumber}</h1>
                         <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${statusColor(sub.status)}`}>{sub.status}</span>
                     </div>
                 </div>
             </div>
 
             {/* Info Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="bg-white rounded-xl border border-gray-200 p-5">
                     <p className="text-xs font-medium text-gray-400 uppercase mb-3">Subscription Details</p>
                     <div className="space-y-2 text-sm">

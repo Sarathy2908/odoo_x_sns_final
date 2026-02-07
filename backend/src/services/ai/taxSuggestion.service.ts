@@ -10,6 +10,88 @@ interface TaxSuggestion {
     reason: string;
 }
 
+interface GeminiTaxResult {
+    taxName: string;
+    rate: number;
+    taxType: string;
+    reason: string;
+}
+
+// Call Gemini API for tax rate suggestion
+export const suggestTaxWithGemini = async (
+    taxName: string,
+    country: string,
+    state: string | null
+): Promise<GeminiTaxResult | null> => {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+        console.error('GEMINI_API_KEY not configured');
+        return null;
+    }
+
+    const prompt = `You are a tax expert. Given the following tax details, provide the current applicable tax rate.
+
+Tax Name/Type: ${taxName}
+Country: ${country}
+${state ? `State/Region: ${state}` : ''}
+
+Respond ONLY with a valid JSON object (no markdown, no code blocks, no explanation outside JSON) in this exact format:
+{
+  "taxName": "the official tax name",
+  "rate": <number - the tax rate percentage>,
+  "taxType": "the tax category like GST, VAT, Sales Tax, etc.",
+  "reason": "brief explanation of why this rate applies"
+}
+
+If the tax type is GST in India, provide the standard GST rate. If a state is provided, check for state-specific rates.
+For combined taxes (like CGST+SGST), provide the total combined rate.
+Always return the most commonly applicable rate for the given context.`;
+
+    try {
+        const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        temperature: 0.1,
+                        maxOutputTokens: 500,
+                    },
+                }),
+            }
+        );
+
+        if (!response.ok) {
+            const errorBody = await response.text();
+            console.error('Gemini API error:', response.status, errorBody);
+            return null;
+        }
+
+        const data = await response.json() as any;
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (!text) {
+            console.error('No response text from Gemini');
+            return null;
+        }
+
+        // Parse JSON from response (handle potential markdown wrapping)
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+            console.error('Could not parse JSON from Gemini response:', text);
+            return null;
+        }
+
+        const result = JSON.parse(jsonMatch[0]) as GeminiTaxResult;
+        return result;
+    } catch (error) {
+        console.error('Gemini API call failed:', error);
+        return null;
+    }
+};
+
 // AI-powered tax suggestion based on location and product type
 export const suggestTax = async (
     country: string,

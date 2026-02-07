@@ -15,6 +15,7 @@ export default function TaxesPage() {
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -117,14 +118,47 @@ export default function TaxesPage() {
     }
   };
 
+  const handleAISuggest = async () => {
+    if (!formData.name && !formData.taxType) {
+      showToast('Please enter a tax name or type first', 'error');
+      return;
+    }
+    if (!formData.country) {
+      showToast('Please enter a country first', 'error');
+      return;
+    }
+
+    setAiLoading(true);
+    try {
+      const response = await taxesAPI.suggestAI({
+        taxName: formData.name || formData.taxType,
+        country: formData.country,
+        state: formData.state || undefined,
+      });
+
+      const suggestion = response.suggestion;
+      setFormData(prev => ({
+        ...prev,
+        rate: String(suggestion.rate),
+        taxType: suggestion.taxType || prev.taxType,
+        name: prev.name || suggestion.taxName,
+      }));
+      showToast(`AI suggested ${suggestion.rate}% — ${suggestion.reason}`, 'success');
+    } catch (error: any) {
+      showToast(error.message || 'AI suggestion failed', 'error');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   if (loading) {
     return <LoadingSpinner message="Loading taxes..." />;
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Taxes</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900">Taxes</h1>
         <button onClick={openCreateModal} className="btn-primary">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -253,6 +287,35 @@ export default function TaxesPage() {
                 placeholder="e.g. Karnataka, California"
               />
             </div>
+          </div>
+          <div>
+            <button
+              type="button"
+              onClick={handleAISuggest}
+              disabled={aiLoading}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-white font-medium transition-all"
+              style={{ backgroundColor: aiLoading ? '#9CA3AF' : '#017E84' }}
+            >
+              {aiLoading ? (
+                <>
+                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Getting AI Suggestion...
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  AI Suggest Rate
+                </>
+              )}
+            </button>
+            <p className="text-xs text-gray-500 mt-1 text-center">
+              Fill in tax name/type &amp; country first, then click to auto-fill rate
+            </p>
           </div>
           <div>
             <label className="flex items-center gap-2 text-sm text-gray-700">
