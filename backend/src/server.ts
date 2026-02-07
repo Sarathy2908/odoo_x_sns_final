@@ -32,7 +32,7 @@ const PORT = process.env.PORT || 5001;
 app.use(cors({
     origin: [
         process.env.FRONTEND_URL || 'http://localhost:3000',
-        'http://localhost:3001',
+        'http://localhost:3001','https://odoo-x-sns-final-gb9t.vercel.app'
     ],
     credentials: true,
 }));
