@@ -30,10 +30,21 @@ const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors({
-    origin: [
-        process.env.FRONTEND_URL || 'http://localhost:3000',
-        'http://localhost:3001','https://odoo-x-sns-final-gb9t.vercel.app'
-    ],
+    origin: (origin, callback) => {
+        const allowed = [
+            process.env.FRONTEND_URL || 'http://localhost:3000',
+            'http://localhost:3000',
+            'http://localhost:3001',
+            'https://odoo-x-sns-final-gb9t.vercel.app',
+        ];
+        // Allow requests with no origin (mobile apps, curl, etc.)
+        if (!origin) return callback(null, true);
+        // Allow exact matches or any Vercel preview deployment for this project
+        if (allowed.includes(origin) || origin.endsWith('.vercel.app')) {
+            return callback(null, true);
+        }
+        callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
 }));
 app.use(express.json());
