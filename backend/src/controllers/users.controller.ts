@@ -9,6 +9,7 @@ const prisma = new PrismaClient();
 export const getUsers = async (req: AuthRequest, res: Response) => {
     try {
         let where: any = {};
+        const { role } = req.query;
 
         if (req.user!.role === UserRole.INTERNAL_USER) {
             // Internal users can only see portal users (customers)
@@ -16,6 +17,9 @@ export const getUsers = async (req: AuthRequest, res: Response) => {
         } else if (req.user!.role === UserRole.PORTAL_USER) {
             // Portal users can only see themselves
             where.id = req.user!.id;
+        } else if (role) {
+            // Admin can filter by role via query param
+            where.role = role as string;
         }
 
         const users = await prisma.user.findMany({

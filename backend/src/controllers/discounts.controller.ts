@@ -20,6 +20,29 @@ export const getDiscounts = async (req: AuthRequest, res: Response) => {
     }
 };
 
+// Get single discount
+export const getDiscount = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+
+        const discount = await prisma.discount.findUnique({
+            where: { id },
+            include: {
+                products: true,
+            },
+        });
+
+        if (!discount) {
+            return res.status(404).json({ error: 'Discount not found' });
+        }
+
+        res.json(discount);
+    } catch (error) {
+        console.error('Get discount error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
 // Create discount (Admin only)
 export const createDiscount = async (req: AuthRequest, res: Response) => {
     try {
@@ -27,6 +50,14 @@ export const createDiscount = async (req: AuthRequest, res: Response) => {
 
         if (!name || !type || value === undefined) {
             return res.status(400).json({ error: 'Name, type, and value are required' });
+        }
+
+        if (startDate && endDate && new Date(endDate) <= new Date(startDate)) {
+            return res.status(400).json({ error: 'End date must be after start date' });
+        }
+
+        if (type === 'PERCENTAGE' && (parseFloat(value) < 0 || parseFloat(value) > 100)) {
+            return res.status(400).json({ error: 'Percentage must be between 0 and 100' });
         }
 
         const discount = await prisma.discount.create({

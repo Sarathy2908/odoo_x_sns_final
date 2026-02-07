@@ -51,7 +51,6 @@ npm install
 3. Configure environment variables:
 ```bash
 cp .env.example .env
-# Edit .env with your database credentials and SMTP settings
 ```
 
 4. Run database migrations:
@@ -114,3 +113,5 @@ The backend exposes RESTful APIs at `http://localhost:5000/api`:
 ## License
 
 MIT
+
+sarathy branch

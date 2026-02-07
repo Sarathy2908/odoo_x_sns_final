@@ -18,6 +18,26 @@ export const getTaxes = async (req: AuthRequest, res: Response) => {
     }
 };
 
+// Get single tax
+export const getTax = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+
+        const tax = await prisma.tax.findUnique({
+            where: { id },
+        });
+
+        if (!tax) {
+            return res.status(404).json({ error: 'Tax not found' });
+        }
+
+        res.json(tax);
+    } catch (error) {
+        console.error('Get tax error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
 // Create tax (Admin only)
 export const createTax = async (req: AuthRequest, res: Response) => {
     try {

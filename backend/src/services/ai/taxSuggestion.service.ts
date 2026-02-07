@@ -35,7 +35,7 @@ export const suggestTax = async (
 
     // Check if country has tax rules
     if (taxRules[country]) {
-        for (const [taxType, config] of Object.entries(taxRules[country])) {
+        for (const [taxType, config] of Object.entries(taxRules[country]) as [string, { rate: number; types: string[] }][]) {
             if (config.types.includes(productType)) {
                 suggestions.push({
                     taxName: `${country} ${taxType}`,

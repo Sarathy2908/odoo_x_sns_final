@@ -60,6 +60,15 @@ export const createPayment = async (req: AuthRequest, res: Response) => {
             return res.status(404).json({ error: 'Invoice not found' });
         }
 
+        if (invoice.status !== InvoiceStatus.CONFIRMED) {
+            return res.status(400).json({ error: 'Payments can only be made on CONFIRMED invoices' });
+        }
+
+        const remainingAmount = invoice.totalAmount - invoice.paidAmount;
+        if (parseFloat(amount) > remainingAmount) {
+            return res.status(400).json({ error: `Payment amount exceeds remaining balance. Maximum allowed: ${remainingAmount}` });
+        }
+
         const payment = await prisma.payment.create({
             data: {
                 invoiceId,
@@ -91,6 +100,30 @@ export const createPayment = async (req: AuthRequest, res: Response) => {
         res.status(201).json(payment);
     } catch (error) {
         console.error('Create payment error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+// Get single payment
+export const getPayment = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+
+        const payment = await prisma.payment.findUnique({
+            where: { id },
+            include: {
+                invoice: true,
+                customer: true,
+            },
+        });
+
+        if (!payment) {
+            return res.status(404).json({ error: 'Payment not found' });
+        }
+
+        res.json(payment);
+    } catch (error) {
+        console.error('Get payment error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };
