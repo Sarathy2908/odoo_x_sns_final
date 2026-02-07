@@ -155,9 +155,18 @@ export const updateProduct = async (req: AuthRequest, res: Response) => {
 export const deleteProduct = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
-        await prisma.product.delete({ where: { id } });
+
+        // Cascade-delete all dependent lines, then the product itself
+        await prisma.$transaction([
+            prisma.subscriptionLine.deleteMany({ where: { productId: id } }),
+            prisma.invoiceLine.deleteMany({ where: { productId: id } }),
+            prisma.quotationLine.deleteMany({ where: { productId: id } }),
+            prisma.product.delete({ where: { id } }),
+        ]);
+
         res.json({ message: 'Product deleted successfully' });
-    } catch (error) {
+    } catch (error: any) {
+        if (error.code === 'P2025') return res.status(404).json({ error: 'Product not found' });
         console.error('Delete product error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }

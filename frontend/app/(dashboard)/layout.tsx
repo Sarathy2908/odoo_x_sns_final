@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { getUser, removeToken } from '@/lib/api';
 
@@ -70,7 +71,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="min-h-screen bg-[#F0EEEF]">
             <aside className={`fixed top-0 left-0 h-full bg-primary text-white transition-all duration-200 z-50 ${sidebarOpen ? 'w-56' : 'w-16'}`}>
                 <div className="h-14 flex items-center justify-between px-4 border-b border-white/15">
-                    {sidebarOpen && <span className="text-base font-bold tracking-tight">SIDAZ</span>}
+                    {sidebarOpen ? (
+                        <Image src="/logo.png" alt="SIDAZ" width={110} height={30} className="object-contain mix-blend-screen" priority />
+                    ) : (
+                        <Image src="/logo.png" alt="SIDAZ" width={28} height={28} className="object-contain mix-blend-screen" priority />
+                    )}
                     <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-1 hover:bg-white/10 rounded transition-colors">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={sidebarOpen ? 'M11 19l-7-7 7-7m8 14l-7-7 7-7' : 'M13 5l7 7-7 7M5 5l7 7-7 7'} />

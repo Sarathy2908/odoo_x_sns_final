@@ -211,7 +211,7 @@ model ProductVariant {
 // PRODUCT ATTRIBUTES
 // ============================================
 
-model Attributeuser {
+model Attribute {
   id            String   @id @default(uuid())
   name          String   @unique  // e.g., "Color", "Size", "Brand"
   displayType   String   @default("select") // select, radio, color, pills
@@ -466,7 +466,7 @@ model Invoice {
 model InvoiceLine {
   id          String   @id @default(uuid())
   invoiceId   String
-  productId   String
+  productId   String?
   description String?
   quantity    Int
   unitPrice   Float
@@ -480,7 +480,7 @@ model InvoiceLine {
 
   // Relations
   invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  product     Product  @relation(fields: [productId], references: [id])
+  product     Product? @relation(fields: [productId], references: [id])
   tax         Tax?     @relation(fields: [taxId], references: [id])
 
   @@map("invoice_lines")

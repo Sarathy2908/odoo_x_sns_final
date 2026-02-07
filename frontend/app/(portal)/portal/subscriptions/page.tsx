@@ -15,6 +15,13 @@ export default function PortalPlans() {
     const [razorpayLoaded, setRazorpayLoaded] = useState(false);
     const { showToast } = useToast();
 
+    // Check if Razorpay is already available (e.g. cached by browser)
+    useEffect(() => {
+        if (typeof window !== 'undefined' && window.Razorpay) {
+            setRazorpayLoaded(true);
+        }
+    }, []);
+
     const loadData = useCallback(async () => {
         try {
             const [catalogRes, subsRes] = await Promise.all([
@@ -38,10 +45,13 @@ export default function PortalPlans() {
     }, [loadData]);
 
     const handleSubscribe = async (plan: any) => {
-        if (!razorpayLoaded) {
+        // Check both state and window object directly
+        const isRazorpayReady = razorpayLoaded || (typeof window !== 'undefined' && !!window.Razorpay);
+        if (!isRazorpayReady) {
             showToast('Payment gateway is loading. Please try again.', 'warning');
             return;
         }
+        if (!razorpayLoaded) setRazorpayLoaded(true);
         if (processingPlanId) return;
 
         setProcessingPlanId(plan.id);
@@ -80,7 +90,7 @@ export default function PortalPlans() {
                     name: user?.name || '',
                     email: user?.email || '',
                 },
-                theme: { color: '#714B67' },
+                theme: { color: '#663399' },
                 modal: {
                     ondismiss: () => {
                         setProcessingPlanId(null);
@@ -134,7 +144,9 @@ export default function PortalPlans() {
         <div className="space-y-6">
             <Script
                 src="https://checkout.razorpay.com/v1/checkout.js"
+                strategy="afterInteractive"
                 onLoad={() => setRazorpayLoaded(true)}
+                onReady={() => setRazorpayLoaded(true)}
             />
 
             <h1 className="text-2xl font-bold text-gray-900">Plans</h1>

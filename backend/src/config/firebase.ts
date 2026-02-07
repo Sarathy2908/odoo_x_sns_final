@@ -23,7 +23,7 @@ if (!admin.apps.length) {
     }
 }
 
-export const storage = admin.storage();
+export const storage: admin.storage.Storage = admin.storage();
 export const bucket = storage.bucket();
 
 export default admin;

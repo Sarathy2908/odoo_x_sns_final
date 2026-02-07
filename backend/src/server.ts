@@ -2,6 +2,7 @@ import express, { Application } from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import path from 'path';
 
 // Import routes
 import authRoutes from './routes/auth.routes';
@@ -38,6 +39,9 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
+
+// Serve static files (PDFs, etc.)
+app.use(express.static(path.join(__dirname, '../public')));
 
 // Health check
 app.get('/health', (req, res) => {

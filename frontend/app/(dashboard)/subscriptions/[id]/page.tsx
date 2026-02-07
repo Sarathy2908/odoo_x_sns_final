@@ -88,7 +88,7 @@ export default function SubscriptionDetailPage() {
           email: subscription.customer?.email || '',
         },
         theme: {
-          color: '#1E40AF',
+          color: '#663399',
         },
       };
 

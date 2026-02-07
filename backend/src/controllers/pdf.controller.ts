@@ -35,7 +35,7 @@ export const generateInvoicePdf = async (req: AuthRequest, res: Response) => {
                 postalCode: invoice.contact.postalCode || undefined,
             } : null,
             lines: invoice.lines.map(line => ({
-                product: line.product?.name || 'Unknown',
+                product: line.product?.name || line.description || 'Unknown',
                 description: line.description || undefined,
                 quantity: line.quantity,
                 unitPrice: line.unitPrice,
@@ -52,7 +52,6 @@ export const generateInvoicePdf = async (req: AuthRequest, res: Response) => {
             notes: invoice.notes || undefined,
         });
 
-        // Save PDF URL to invoice
         await prisma.invoice.update({
             where: { id },
             data: { pdfUrl },
