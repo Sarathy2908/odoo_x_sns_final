@@ -1,0 +1,374 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Roles: ADMIN, INTERNAL_USER, PORTAL_USER
+enum UserRole {
+  ADMIN
+  INTERNAL_USER
+  PORTAL_USER
+}
+
+// Billing Periods for Recurring Plans
+enum BillingPeriod {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+// Subscription Status Flow
+enum SubscriptionStatus {
+  DRAFT
+  QUOTATION
+  CONFIRMED
+  ACTIVE
+  CLOSED
+}
+
+// Invoice Status Flow
+enum InvoiceStatus {
+  DRAFT
+  CONFIRMED
+  PAID
+  CANCELLED
+}
+
+// Discount Types
+enum DiscountType {
+  FIXED
+  PERCENTAGE
+}
+
+// Payment Methods
+enum PaymentMethod {
+  CREDIT_CARD
+  DEBIT_CARD
+  BANK_TRANSFER
+  UPI
+  CASH
+  OTHER
+}
+
+// ============================================
+// USER MANAGEMENT
+// ============================================
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  password      String
+  name          String
+  role          UserRole @default(PORTAL_USER)
+  phone         String?
+  address       String?
+  city          String?
+  state         String?
+  country       String?
+  postalCode    String?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Password reset
+  resetToken    String?
+  resetTokenExpiry DateTime?
+  
+  // Relations
+  subscriptions Subscription[]
+  invoices      Invoice[]
+  payments      Payment[]
+  createdUsers  User[]   @relation("CreatedBy")
+  createdBy     User?    @relation("CreatedBy", fields: [createdById], references: [id])
+  createdById   String?
+  
+  @@map("users")
+}
+
+// ============================================
+// PRODUCT MANAGEMENT
+// ============================================
+
+model Product {
+  id            String   @id @default(uuid())
+  name          String
+  description   String?
+  productType   String   // e.g., "Service", "Physical", "Digital"
+  salesPrice    Float
+  costPrice     Float
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  variants      ProductVariant[]
+  subscriptionLines SubscriptionLine[]
+  invoiceLines  InvoiceLine[]
+  quotationLines QuotationLine[]
+  discounts     Discount[]
+  
+  @@map("products")
+}
+
+model ProductVariant {
+  id            String   @id @default(uuid())
+  productId     String
+  attribute     String   // e.g., "Brand", "Size", "Color"
+  value         String   // e.g., "Odoo", "Large", "Red"
+  extraPrice    Float    // Additional price for this variant
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@map("product_variants")
+}
+
+// ============================================
+// RECURRING PLANS
+// ============================================
+
+model RecurringPlan {
+  id            String         @id @default(uuid())
+  name          String
+  description   String?
+  price         Float
+  billingPeriod BillingPeriod
+  minQuantity   Int            @default(1)
+  startDate     DateTime?
+  endDate       DateTime?
+  
+  // Plan Options
+  autoClose     Boolean        @default(false)
+  closable      Boolean        @default(true)
+  pausable      Boolean        @default(true)
+  renewable     Boolean        @default(true)
+  
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  // Relations
+  subscriptions Subscription[]
+  quotationTemplates QuotationTemplate[]
+  
+  @@map("recurring_plans")
+}
+
+// ============================================
+// SUBSCRIPTIONS
+// ============================================
+
+model Subscription {
+  id                String             @id @default(uuid())
+  subscriptionNumber String           @unique
+  customerId        String
+  planId            String
+  startDate         DateTime
+  expirationDate    DateTime?
+  paymentTerms      String?            // e.g., "Net 30", "Due on Receipt"
+  status            SubscriptionStatus @default(DRAFT)
+  
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  
+  // Relations
+  customer          User               @relation(fields: [customerId], references: [id])
+  plan              RecurringPlan      @relation(fields: [planId], references: [id])
+  lines             SubscriptionLine[]
+  invoices          Invoice[]
+  
+  @@map("subscriptions")
+}
+
+model SubscriptionLine {
+  id              String   @id @default(uuid())
+  subscriptionId  String
+  productId       String
+  quantity        Int
+  unitPrice       Float
+  taxId           String?
+  amount          Float    // quantity * unitPrice
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  subscription    Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  product         Product      @relation(fields: [productId], references: [id])
+  tax             Tax?         @relation(fields: [taxId], references: [id])
+  
+  @@map("subscription_lines")
+}
+
+// ============================================
+// QUOTATION TEMPLATES
+// ============================================
+
+model QuotationTemplate {
+  id            String   @id @default(uuid())
+  name          String
+  description   String?
+  validityDays  Int      @default(30)
+  planId        String
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  plan          RecurringPlan @relation(fields: [planId], references: [id])
+  lines         QuotationLine[]
+  
+  @@map("quotation_templates")
+}
+
+model QuotationLine {
+  id          String   @id @default(uuid())
+  templateId  String
+  productId   String
+  quantity    Int
+  unitPrice   Float
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  template    QuotationTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  product     Product           @relation(fields: [productId], references: [id])
+  
+  @@map("quotation_lines")
+}
+
+// ============================================
+// INVOICES
+// ============================================
+
+model Invoice {
+  id              String        @id @default(uuid())
+  invoiceNumber   String        @unique
+  customerId      String
+  subscriptionId  String?
+  invoiceDate     DateTime      @default(now())
+  dueDate         DateTime?
+  status          InvoiceStatus @default(DRAFT)
+  subtotal        Float
+  taxAmount       Float
+  totalAmount     Float
+  paidAmount      Float         @default(0)
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  customer        User          @relation(fields: [customerId], references: [id])
+  subscription    Subscription? @relation(fields: [subscriptionId], references: [id])
+  lines           InvoiceLine[]
+  payments        Payment[]
+  
+  @@map("invoices")
+}
+
+model InvoiceLine {
+  id          String   @id @default(uuid())
+  invoiceId   String
+  productId   String
+  description String?
+  quantity    Int
+  unitPrice   Float
+  taxId       String?
+  taxAmount   Float    @default(0)
+  amount      Float    // quantity * unitPrice + taxAmount
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [productId], references: [id])
+  tax         Tax?     @relation(fields: [taxId], references: [id])
+  
+  @@map("invoice_lines")
+}
+
+// ============================================
+// PAYMENTS
+// ============================================
+
+model Payment {
+  id            String        @id @default(uuid())
+  invoiceId     String
+  customerId    String
+  amount        Float
+  paymentMethod PaymentMethod
+  paymentDate   DateTime      @default(now())
+  reference     String?       // Transaction reference
+  notes         String?
+  
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  // Relations
+  invoice       Invoice       @relation(fields: [invoiceId], references: [id])
+  customer      User          @relation(fields: [customerId], references: [id])
+  
+  @@map("payments")
+}
+
+// ============================================
+// DISCOUNTS
+// ============================================
+
+model Discount {
+  id              String       @id @default(uuid())
+  name            String
+  description     String?
+  type            DiscountType
+  value           Float        // Amount or percentage
+  minPurchase     Float?       // Minimum purchase amount
+  minQuantity     Int?         // Minimum quantity
+  startDate       DateTime?
+  endDate         DateTime?
+  limitUsage      Int?         // Max number of times this can be used
+  usageCount      Int          @default(0)
+  
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  
+  // Relations - Discounts can apply to products or subscriptions
+  products        Product[]
+  
+  @@map("discounts")
+}
+
+// ============================================
+// TAX MANAGEMENT
+// ============================================
+
+model Tax {
+  id            String   @id @default(uuid())
+  name          String
+  description   String?
+  rate          Float    // Tax percentage (e.g., 18 for 18%)
+  taxType       String   // e.g., "GST", "VAT", "Sales Tax"
+  country       String?
+  state         String?
+  isActive      Boolean  @default(true)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  subscriptionLines SubscriptionLine[]
+  invoiceLines  InvoiceLine[]
+  
+  @@map("taxes")
+}
