@@ -58,9 +58,9 @@ export const generateInvoicePdf = async (req: AuthRequest, res: Response) => {
         });
 
         res.json({ pdfUrl });
-    } catch (error) {
-        console.error('Generate invoice PDF error:', error);
-        res.status(500).json({ error: 'Failed to generate PDF' });
+    } catch (error: any) {
+        console.error('Generate invoice PDF error:', error?.message || error);
+        res.status(500).json({ error: 'Failed to generate PDF', details: error?.message });
     }
 };
 

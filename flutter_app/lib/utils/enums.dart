@@ -1,0 +1,15 @@
+enum UserRole { ADMIN, INTERNAL_USER, PORTAL_USER }
+
+enum SubscriptionStatus { DRAFT, QUOTATION, CONFIRMED, ACTIVE, CLOSED }
+
+enum InvoiceStatus { DRAFT, CONFIRMED, PAID, CANCELLED }
+
+enum BillingPeriod { DAILY, WEEKLY, MONTHLY, YEARLY }
+
+enum DiscountType { FIXED, PERCENTAGE }
+
+enum PaymentMethod { CREDIT_CARD, DEBIT_CARD, UPI, NET_BANKING, WALLET, CASH, RAZORPAY, OTHER }
+
+enum PaymentStatus { PENDING, COMPLETED, FAILED, REFUNDED }
+
+enum ContactType { INDIVIDUAL, COMPANY }
