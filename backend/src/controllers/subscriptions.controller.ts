@@ -303,22 +303,7 @@ export const updateSubscriptionStatus = async (req: AuthRequest, res: Response) 
                     }
                 } else if (subscription.plan) {
                     subtotal = subscription.plan.price;
-                    let defaultProduct = await prisma.product.findFirst({
-                        where: { name: 'Subscription Plan', productType: 'Service' },
-                    });
-                    if (!defaultProduct) {
-                        defaultProduct = await prisma.product.create({
-                            data: {
-                                name: 'Subscription Plan',
-                                productType: 'Service',
-                                salesPrice: 0,
-                                costPrice: 0,
-                                description: 'Auto-created product for plan-based subscriptions',
-                            },
-                        });
-                    }
                     invoiceLines.push({
-                        productId: defaultProduct.id,
                         description: subscription.plan.name,
                         quantity: 1,
                         unitPrice: subscription.plan.price,

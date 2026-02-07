@@ -6,6 +6,9 @@ import { ToastProvider } from './components/Toast';
 export const metadata: Metadata = {
   title: 'SIDAZ - Subscription Management',
   description: 'SIDAZ - Subscription and Billing Management System',
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({

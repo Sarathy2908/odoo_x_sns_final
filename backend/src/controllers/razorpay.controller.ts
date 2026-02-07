@@ -151,23 +151,7 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
                 }
             } else if (updatedSubscription.plan) {
                 subtotal = updatedSubscription.plan.price;
-                // Find or create a default product for plan subscriptions
-                let defaultProduct = await prisma.product.findFirst({
-                    where: { name: 'Subscription Plan', productType: 'Service' },
-                });
-                if (!defaultProduct) {
-                    defaultProduct = await prisma.product.create({
-                        data: {
-                            name: 'Subscription Plan',
-                            productType: 'Service',
-                            salesPrice: 0,
-                            costPrice: 0,
-                            description: 'Auto-created product for plan-based subscriptions',
-                        },
-                    });
-                }
                 invoiceLines.push({
-                    productId: defaultProduct.id,
                     description: updatedSubscription.plan.name,
                     quantity: 1,
                     unitPrice: updatedSubscription.plan.price,

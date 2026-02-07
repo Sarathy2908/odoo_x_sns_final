@@ -6,3 +6,4 @@ dist/
 *.log
 *.json.bak
 *-firebase-adminsdk-*.json
+backend/public/pdfs/

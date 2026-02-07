@@ -26,7 +26,6 @@ async function uploadToFirebase(buffer: Buffer, filename: string): Promise<strin
         },
     });
 
-    // Make the file publicly readable
     await file.makePublic();
 
     return `https://storage.googleapis.com/${bucket.name}/pdfs/${filename}`;
@@ -61,7 +60,7 @@ export async function generateInvoicePDF(data: InvoicePDFData): Promise<string> 
     const doc = new PDFDocument({ margin: 50, size: 'A4' });
 
     // Header
-        doc.fontSize(24).fillColor('#1E40AF').text('SIDAZ', 50, 50);
+        doc.fontSize(24).fillColor('#663399').text('SIDAZ', 50, 50);
         doc.fontSize(10).fillColor('#666').text('Subscription Management System', 50, 78);
 
         // Invoice Title
@@ -196,7 +195,7 @@ export async function generateQuotationPDF(data: QuotationPDFData): Promise<stri
     const doc = new PDFDocument({ margin: 50, size: 'A4' });
 
     // Header
-        doc.fontSize(24).fillColor('#1E40AF').text('SIDAZ', 50, 50);
+        doc.fontSize(24).fillColor('#663399').text('SIDAZ', 50, 50);
         doc.fontSize(10).fillColor('#666').text('Subscription Management System', 50, 78);
         doc.fontSize(20).fillColor('#1a1a1a').text('QUOTATION', 400, 50, { align: 'right' });
 
