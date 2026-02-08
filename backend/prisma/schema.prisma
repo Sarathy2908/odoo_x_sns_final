@@ -319,6 +319,10 @@ model Subscription {
   // Totals
   recurringTotal    Float              @default(0)
 
+  // Discount
+  discountId        String?
+  discountAmount    Float              @default(0)
+
   // Notes
   internalNotes     String?
 
@@ -329,6 +333,7 @@ model Subscription {
   customer          User               @relation(fields: [customerId], references: [id])
   contact           Contact?           @relation(fields: [contactId], references: [id])
   plan              RecurringPlan      @relation(fields: [planId], references: [id])
+  discount          Discount?          @relation(fields: [discountId], references: [id])
   lines             SubscriptionLine[]
   invoices          Invoice[]
 
@@ -444,6 +449,10 @@ model Invoice {
   totalAmount     Float
   paidAmount      Float         @default(0)
 
+  // Discount
+  discountAmount  Float         @default(0)
+  discountCode    String?
+
   // PDF
   pdfUrl          String?
 
@@ -533,6 +542,7 @@ model Discount {
 
   // Relations - Discounts can apply to products or subscriptions
   products        Product[]
+  subscriptions   Subscription[]
 
   @@map("discounts")
 }

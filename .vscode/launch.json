@@ -1,0 +1,18 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+        "name": "Dart",
+        "type": "dart",
+        "request": "launch",
+        "program": "bin/main.dart"
+    },
+    {
+      "name": "SIDAZ Flutter App",
+      "type": "dart",
+      "request": "launch",
+      "program": "flutter_app/lib/main.dart",
+      "cwd": "${workspaceFolder}/flutter_app"
+    }
+  ]
+}

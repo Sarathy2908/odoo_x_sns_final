@@ -18,6 +18,8 @@ import 'screens/portal/confirmation_screen.dart';
 import 'screens/portal/portal_subscription_detail_screen.dart';
 import 'screens/portal/portal_invoice_detail_screen.dart';
 import 'screens/portal/portal_payments_screen.dart';
+import 'screens/portal/plan_detail_screen.dart';
+import 'models/recurring_plan.dart';
 
 class SidazApp extends StatelessWidget {
   const SidazApp({super.key});
@@ -70,6 +72,12 @@ class SidazApp extends StatelessWidget {
           final id = settings.arguments as String;
           return MaterialPageRoute(
             builder: (_) => PortalInvoiceDetailScreen(invoiceId: id),
+          );
+        }
+        if (settings.name == '/portal/plan-detail') {
+          final plan = settings.arguments as RecurringPlan;
+          return MaterialPageRoute(
+            builder: (_) => PlanDetailScreen(plan: plan),
           );
         }
         return null;

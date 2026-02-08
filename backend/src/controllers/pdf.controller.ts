@@ -46,6 +46,8 @@ export const generateInvoicePdf = async (req: AuthRequest, res: Response) => {
                 amount: line.amount,
             })),
             subtotal: invoice.subtotal,
+            discountAmount: invoice.discountAmount || 0,
+            discountCode: invoice.discountCode || undefined,
             taxAmount: invoice.taxAmount,
             totalAmount: invoice.totalAmount,
             paidAmount: invoice.paidAmount,

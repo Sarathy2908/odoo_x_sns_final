@@ -49,6 +49,8 @@ interface InvoicePDFData {
         amount: number;
     }>;
     subtotal: number;
+    discountAmount?: number;
+    discountCode?: string;
     taxAmount: number;
     totalAmount: number;
     paidAmount: number;
@@ -135,6 +137,13 @@ export async function generateInvoicePDF(data: InvoicePDFData): Promise<string> 
         doc.fontSize(9).fillColor('#666').text('Subtotal', 350, y);
         doc.fillColor('#1a1a1a').text(`₹${data.subtotal.toFixed(2)}`, 490, y, { width: 55, align: 'right' });
         y += 16;
+
+        if (data.discountAmount && data.discountAmount > 0) {
+            const discountLabel = data.discountCode ? `Discount (${data.discountCode})` : 'Discount';
+            doc.fillColor('#059669').text(discountLabel, 350, y);
+            doc.text(`-₹${data.discountAmount.toFixed(2)}`, 490, y, { width: 55, align: 'right' });
+            y += 16;
+        }
 
         doc.fillColor('#666').text('Tax', 350, y);
         doc.fillColor('#1a1a1a').text(`₹${data.taxAmount.toFixed(2)}`, 490, y, { width: 55, align: 'right' });

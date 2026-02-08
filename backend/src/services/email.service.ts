@@ -53,6 +53,8 @@ interface InvoiceEmailData {
     amount: number;
     paymentId: string;
     invoiceDate: string;
+    discountAmount?: number;
+    discountCode?: string;
 }
 
 export const sendInvoiceEmail = async (data: InvoiceEmailData) => {
@@ -95,6 +97,12 @@ export const sendInvoiceEmail = async (data: InvoiceEmailData) => {
                 <td style="padding: 6px 0; color: #666;">Payment ID</td>
                 <td style="padding: 6px 0; color: #1a1a1a; text-align: right; font-size: 12px;">${data.paymentId}</td>
               </tr>
+              ${data.discountAmount && data.discountAmount > 0 ? `
+              <tr>
+                <td style="padding: 6px 0; color: #059669;">Discount${data.discountCode ? ` (${data.discountCode})` : ''}</td>
+                <td style="padding: 6px 0; color: #059669; text-align: right;">-₹${data.discountAmount.toLocaleString('en-IN')}</td>
+              </tr>
+              ` : ''}
               <tr style="border-top: 1px solid #e5e7eb;">
                 <td style="padding: 12px 0 6px; color: #1a1a1a; font-weight: 700; font-size: 16px;">Amount Paid</td>
                 <td style="padding: 12px 0 6px; color: #059669; font-weight: 700; font-size: 16px; text-align: right;">₹${data.amount.toLocaleString('en-IN')}</td>

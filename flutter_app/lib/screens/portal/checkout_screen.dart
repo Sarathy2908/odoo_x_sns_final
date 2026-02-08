@@ -48,10 +48,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     setState(() => _isProcessing = true);
 
     try {
-      final result = await portalProvider.subscribe({
+      final Map<String, dynamic> subscribeData = {
         'items': cartProvider.toJsonList(),
-        'totalAmount': cartProvider.totalAmount,
-      });
+        'totalAmount': cartProvider.finalAmount,
+      };
+      if (cartProvider.hasDiscount) {
+        subscribeData['discountId'] = cartProvider.discountId;
+        subscribeData['discountAmount'] = cartProvider.discountAmount;
+      }
+      final result = await portalProvider.subscribe(subscribeData);
 
       _orderId = result['orderId']?.toString();
       final amount = (result['amount'] as num?)?.toDouble() ??
@@ -233,7 +238,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           );
                         }),
                         const SizedBox(height: 16),
-                        // Total
+                        // Price breakdown
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
@@ -243,26 +248,78 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 color:
                                     AppColors.primary.withValues(alpha: 0.2)),
                           ),
-                          child: Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
+                          child: Column(
                             children: [
-                              const Text(
-                                'Total Amount',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary,
-                                ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'Subtotal',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                  Text(
+                                    CurrencyFormatter.format(
+                                        cartProvider.totalAmount),
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Text(
-                                CurrencyFormatter.format(
-                                    cartProvider.totalAmount),
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.primary,
+                              if (cartProvider.hasDiscount) ...[
+                                const SizedBox(height: 8),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'Discount (${cartProvider.discountCode})',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.success,
+                                      ),
+                                    ),
+                                    Text(
+                                      '- ${CurrencyFormatter.format(cartProvider.discountAmount)}',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.success,
+                                      ),
+                                    ),
+                                  ],
                                 ),
+                              ],
+                              const SizedBox(height: 8),
+                              const Divider(height: 1),
+                              const SizedBox(height: 8),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'Total Amount',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  Text(
+                                    CurrencyFormatter.format(
+                                        cartProvider.finalAmount),
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),

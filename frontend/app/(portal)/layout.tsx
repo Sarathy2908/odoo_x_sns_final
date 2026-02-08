@@ -25,6 +25,8 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         const currentUser = getUser();
         if (!currentUser) {
             router.push('/login');
+        } else if (currentUser.role !== 'PORTAL_USER') {
+            router.push('/dashboard');
         } else {
             setUser(currentUser);
         }
