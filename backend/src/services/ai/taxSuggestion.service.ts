@@ -191,6 +191,7 @@ export const calculateApplicableTaxes = async (
 ): Promise<any[]> => {
     const customer = await prisma.user.findUnique({
         where: { id: customerId },
+        include: { contact: { select: { country: true, state: true } } },
     });
 
     if (!customer) {
@@ -205,8 +206,8 @@ export const calculateApplicableTaxes = async (
 
     for (const product of products) {
         const suggestions = await suggestTax(
-            customer.country || 'India',
-            customer.state,
+            customer.contact?.country || 'India',
+            customer.contact?.state ?? null,
             product.productType
         );
 

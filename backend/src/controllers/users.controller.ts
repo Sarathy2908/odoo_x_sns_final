@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { PrismaClient, UserRole } from '@prisma/client';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { AuthRequest } from '../types';
 
 const prisma = new PrismaClient();
@@ -12,13 +12,10 @@ export const getUsers = async (req: AuthRequest, res: Response) => {
         const { role } = req.query;
 
         if (req.user!.role === UserRole.INTERNAL_USER) {
-            // Internal users can only see portal users (customers)
             where.role = UserRole.PORTAL_USER;
         } else if (req.user!.role === UserRole.PORTAL_USER) {
-            // Portal users can only see themselves
             where.id = req.user!.id;
         } else if (role) {
-            // Admin can filter by role via query param
             where.role = role as string;
         }
 
@@ -30,12 +27,18 @@ export const getUsers = async (req: AuthRequest, res: Response) => {
                 name: true,
                 role: true,
                 phone: true,
-                address: true,
-                city: true,
-                state: true,
-                country: true,
-                postalCode: true,
                 createdAt: true,
+                contact: {
+                    select: {
+                        id: true,
+                        street: true,
+                        city: true,
+                        state: true,
+                        country: true,
+                        postalCode: true,
+                        companyName: true,
+                    },
+                },
             },
             orderBy: { createdAt: 'desc' },
         });
@@ -52,7 +55,6 @@ export const getUser = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
 
-        // Check access
         if (req.user!.role === UserRole.PORTAL_USER && id !== req.user!.id) {
             return res.status(403).json({ error: 'Access denied' });
         }
@@ -65,12 +67,18 @@ export const getUser = async (req: AuthRequest, res: Response) => {
                 name: true,
                 role: true,
                 phone: true,
-                address: true,
-                city: true,
-                state: true,
-                country: true,
-                postalCode: true,
                 createdAt: true,
+                contact: {
+                    select: {
+                        id: true,
+                        street: true,
+                        city: true,
+                        state: true,
+                        country: true,
+                        postalCode: true,
+                        companyName: true,
+                    },
+                },
             },
         });
 
@@ -128,43 +136,58 @@ export const createInternalUser = async (req: AuthRequest, res: Response) => {
     }
 };
 
-// Update user
+// Update user (address fields stored in Contact)
 export const updateUser = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
-        const { name, phone, address, city, state, country, postalCode } = req.body;
+        const { name, phone, street, street2, city, state, country, postalCode, companyName } = req.body;
 
-        // Check access
         if (req.user!.role !== UserRole.ADMIN && id !== req.user!.id) {
             return res.status(403).json({ error: 'Access denied' });
         }
 
         const user = await prisma.user.update({
             where: { id },
-            data: {
-                name,
-                phone,
-                address,
-                city,
-                state,
-                country,
-                postalCode,
-            },
+            data: { name, phone },
+            select: { id: true, email: true, name: true, role: true, phone: true, contactId: true },
+        });
+
+        // Update or create the linked Contact with address fields
+        const addressData = { street, street2, city, state, country, postalCode, companyName };
+        if (user.contactId) {
+            await prisma.contact.update({
+                where: { id: user.contactId },
+                data: { name, phone, ...addressData },
+            });
+        } else {
+            const contact = await prisma.contact.create({
+                data: {
+                    name: user.name,
+                    email: user.email,
+                    phone,
+                    contactType: 'INDIVIDUAL',
+                    isCustomer: true,
+                    ...addressData,
+                },
+            });
+            await prisma.user.update({
+                where: { id: user.id },
+                data: { contactId: contact.id },
+            });
+        }
+
+        // Return user with contact
+        const updatedUser = await prisma.user.findUnique({
+            where: { id },
             select: {
-                id: true,
-                email: true,
-                name: true,
-                role: true,
-                phone: true,
-                address: true,
-                city: true,
-                state: true,
-                country: true,
-                postalCode: true,
+                id: true, email: true, name: true, role: true, phone: true,
+                contact: {
+                    select: { id: true, street: true, city: true, state: true, country: true, postalCode: true, companyName: true },
+                },
             },
         });
 
-        res.json(user);
+        res.json(updatedUser);
     } catch (error) {
         console.error('Update user error:', error);
         res.status(500).json({ error: 'Internal server error' });

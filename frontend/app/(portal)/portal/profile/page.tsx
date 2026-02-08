@@ -10,7 +10,10 @@ export default function PortalProfile() {
     const [loading, setLoading] = useState(true);
     const [editing, setEditing] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [form, setForm] = useState({ name: '', email: '', phone: '', company: '' });
+    const [form, setForm] = useState({
+        name: '', email: '', phone: '', companyName: '',
+        street: '', street2: '', city: '', state: '', country: '', postalCode: '',
+    });
     const [toast, setToast] = useState<{ type: string; message: string } | null>(null);
 
     useEffect(() => {
@@ -28,7 +31,13 @@ export default function PortalProfile() {
                 name: profileRes.name || '',
                 email: profileRes.email || '',
                 phone: profileRes.phone || '',
-                company: profileRes.company || '',
+                companyName: profileRes.companyName || '',
+                street: profileRes.street || '',
+                street2: profileRes.street2 || '',
+                city: profileRes.city || '',
+                state: profileRes.state || '',
+                country: profileRes.country || '',
+                postalCode: profileRes.postalCode || '',
             });
             setSubscriptions(Array.isArray(subsRes) ? subsRes : subsRes.subscriptions || []);
         } catch (err) {
@@ -65,6 +74,8 @@ export default function PortalProfile() {
         }
     };
 
+    const hasAddress = profile?.street && profile?.city && profile?.state && profile?.country && profile?.postalCode;
+
     if (loading) {
         return (
             <div className="flex items-center justify-center py-20">
@@ -91,6 +102,19 @@ export default function PortalProfile() {
                 }`}>{toast.message}</div>
             )}
 
+            {/* Address Missing Warning */}
+            {!hasAddress && !editing && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
+                    <svg className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    <div>
+                        <p className="text-sm font-medium text-amber-800">Address required for subscriptions</p>
+                        <p className="text-xs text-amber-600 mt-1">Please complete your address details to subscribe to plans. Click &quot;Edit Profile&quot; to add your address.</p>
+                    </div>
+                </div>
+            )}
+
             {/* User Details Card */}
             <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6">
                 {/* Avatar */}
@@ -106,43 +130,114 @@ export default function PortalProfile() {
 
                 {editing ? (
                     <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                            <input
-                                type="text"
-                                value={form.name}
-                                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                                className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                            />
+                        {/* Basic Info */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                                <input
+                                    type="text"
+                                    value={form.name}
+                                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                                    className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                <input
+                                    type="email"
+                                    value={form.email}
+                                    disabled
+                                    className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
+                                />
+                                <p className="text-xs text-gray-400 mt-1">Email cannot be changed</p>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                <PhoneInput
+                                    value={form.phone}
+                                    onChange={(val) => setForm({ ...form, phone: val })}
+                                    placeholder="Enter phone number"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
+                                <input
+                                    type="text"
+                                    value={form.companyName}
+                                    onChange={(e) => setForm({ ...form, companyName: e.target.value })}
+                                    className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                    placeholder="Enter company name"
+                                />
+                            </div>
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                            <input
-                                type="email"
-                                value={form.email}
-                                disabled
-                                className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
-                            />
-                            <p className="text-xs text-gray-400 mt-1">Email cannot be changed</p>
+
+                        {/* Address Section */}
+                        <div className="pt-4 border-t border-gray-100">
+                            <h3 className="text-sm font-semibold text-gray-900 mb-3">Address Details</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Street Address <span className="text-red-500">*</span></label>
+                                    <input
+                                        type="text"
+                                        value={form.street}
+                                        onChange={(e) => setForm({ ...form, street: e.target.value })}
+                                        className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                        placeholder="Street address, P.O. box"
+                                    />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Street Address 2</label>
+                                    <input
+                                        type="text"
+                                        value={form.street2}
+                                        onChange={(e) => setForm({ ...form, street2: e.target.value })}
+                                        className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                        placeholder="Apartment, suite, unit, building, floor, etc."
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">City <span className="text-red-500">*</span></label>
+                                    <input
+                                        type="text"
+                                        value={form.city}
+                                        onChange={(e) => setForm({ ...form, city: e.target.value })}
+                                        className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                        placeholder="City"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">State <span className="text-red-500">*</span></label>
+                                    <input
+                                        type="text"
+                                        value={form.state}
+                                        onChange={(e) => setForm({ ...form, state: e.target.value })}
+                                        className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                        placeholder="State / Province"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Country <span className="text-red-500">*</span></label>
+                                    <input
+                                        type="text"
+                                        value={form.country}
+                                        onChange={(e) => setForm({ ...form, country: e.target.value })}
+                                        className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                        placeholder="Country"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Postal Code <span className="text-red-500">*</span></label>
+                                    <input
+                                        type="text"
+                                        value={form.postalCode}
+                                        onChange={(e) => setForm({ ...form, postalCode: e.target.value })}
+                                        className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                        placeholder="ZIP / Postal code"
+                                    />
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                            <PhoneInput
-                                value={form.phone}
-                                onChange={(val) => setForm({ ...form, phone: val })}
-                                placeholder="Enter phone number"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
-                            <input
-                                type="text"
-                                value={form.company}
-                                onChange={(e) => setForm({ ...form, company: e.target.value })}
-                                className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                                placeholder="Enter company name"
-                            />
-                        </div>
+
                         <div className="flex items-center gap-3 pt-2">
                             <button
                                 onClick={handleSave}
@@ -158,7 +253,13 @@ export default function PortalProfile() {
                                         name: profile?.name || '',
                                         email: profile?.email || '',
                                         phone: profile?.phone || '',
-                                        company: profile?.company || '',
+                                        companyName: profile?.companyName || '',
+                                        street: profile?.street || '',
+                                        street2: profile?.street2 || '',
+                                        city: profile?.city || '',
+                                        state: profile?.state || '',
+                                        country: profile?.country || '',
+                                        postalCode: profile?.postalCode || '',
                                     });
                                 }}
                                 className="px-5 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
@@ -172,21 +273,36 @@ export default function PortalProfile() {
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <p className="text-xs font-medium text-gray-400 uppercase">Full Name</p>
-                                <p className="text-sm text-gray-900 mt-1">{profile?.name || '—'}</p>
+                                <p className="text-sm text-gray-900 mt-1">{profile?.name || '\u2014'}</p>
                             </div>
                             <div>
                                 <p className="text-xs font-medium text-gray-400 uppercase">Email</p>
-                                <p className="text-sm text-gray-900 mt-1">{profile?.email || '—'}</p>
+                                <p className="text-sm text-gray-900 mt-1">{profile?.email || '\u2014'}</p>
                             </div>
                             <div>
                                 <p className="text-xs font-medium text-gray-400 uppercase">Phone</p>
-                                <p className="text-sm text-gray-900 mt-1">{profile?.phone || '—'}</p>
+                                <p className="text-sm text-gray-900 mt-1">{profile?.phone || '\u2014'}</p>
                             </div>
                             <div>
                                 <p className="text-xs font-medium text-gray-400 uppercase">Company</p>
-                                <p className="text-sm text-gray-900 mt-1">{profile?.company || '—'}</p>
+                                <p className="text-sm text-gray-900 mt-1">{profile?.companyName || '\u2014'}</p>
                             </div>
                         </div>
+
+                        {/* Address Display */}
+                        <div className="pt-4 border-t border-gray-100">
+                            <p className="text-xs font-medium text-gray-400 uppercase mb-2">Address</p>
+                            {hasAddress ? (
+                                <div className="text-sm text-gray-900 space-y-0.5">
+                                    <p>{profile.street}{profile.street2 ? `, ${profile.street2}` : ''}</p>
+                                    <p>{profile.city}, {profile.state} {profile.postalCode}</p>
+                                    <p>{profile.country}</p>
+                                </div>
+                            ) : (
+                                <p className="text-sm text-gray-400 italic">No address on file</p>
+                            )}
+                        </div>
+
                         <div className="pt-4 border-t border-gray-100">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
@@ -195,7 +311,7 @@ export default function PortalProfile() {
                                 </div>
                                 <div>
                                     <p className="text-xs font-medium text-gray-400 uppercase">Member Since</p>
-                                    <p className="text-sm text-gray-900 mt-1">{profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }) : '—'}</p>
+                                    <p className="text-sm text-gray-900 mt-1">{profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }) : '\u2014'}</p>
                                 </div>
                             </div>
                         </div>
@@ -232,7 +348,7 @@ export default function PortalProfile() {
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-lg font-bold text-gray-900">₹{Number(sub.recurringTotal).toLocaleString('en-IN')}</p>
+                                        <p className="text-lg font-bold text-gray-900">{'\u20B9'}{Number(sub.recurringTotal).toLocaleString('en-IN')}</p>
                                         <p className="text-xs text-gray-500">/{sub.plan?.billingPeriod?.toLowerCase() || 'month'}</p>
                                     </div>
                                 </div>

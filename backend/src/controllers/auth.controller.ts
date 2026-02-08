@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { PrismaClient, UserRole } from '@prisma/client';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { sendPasswordResetEmail } from '../services/email.service';
@@ -31,7 +31,7 @@ const validatePassword = (password: string): { valid: boolean; errors: string[] 
 // Signup
 export const signup = async (req: Request, res: Response) => {
     try {
-        const { email, password, name, phone, address, city, state, country, postalCode } = req.body;
+        const { email, password, name, phone } = req.body;
 
         // Validate required fields
         if (!email || !password || !name) {
@@ -53,19 +53,26 @@ export const signup = async (req: Request, res: Response) => {
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create user (default role: PORTAL_USER)
+        // Create a Contact record for the user (address stored here)
+        const contact = await prisma.contact.create({
+            data: {
+                name,
+                email,
+                phone,
+                contactType: 'INDIVIDUAL',
+                isCustomer: true,
+            },
+        });
+
+        // Create user linked to the contact
         const user = await prisma.user.create({
             data: {
                 email,
                 password: hashedPassword,
                 name,
                 phone,
-                address,
-                city,
-                state,
-                country,
-                postalCode,
                 role: UserRole.PORTAL_USER,
+                contactId: contact.id,
             },
             select: {
                 id: true,
@@ -226,12 +233,19 @@ export const getCurrentUser = async (req: AuthRequest, res: Response) => {
                 name: true,
                 role: true,
                 phone: true,
-                address: true,
-                city: true,
-                state: true,
-                country: true,
-                postalCode: true,
                 createdAt: true,
+                contact: {
+                    select: {
+                        id: true,
+                        street: true,
+                        street2: true,
+                        city: true,
+                        state: true,
+                        country: true,
+                        postalCode: true,
+                        companyName: true,
+                    },
+                },
             },
         });
 
@@ -239,7 +253,19 @@ export const getCurrentUser = async (req: AuthRequest, res: Response) => {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        res.json(user);
+        // Flatten contact address into the response for backwards compatibility
+        const { contact, ...userData } = user;
+        res.json({
+            ...userData,
+            street: contact?.street || '',
+            street2: contact?.street2 || '',
+            city: contact?.city || '',
+            state: contact?.state || '',
+            country: contact?.country || '',
+            postalCode: contact?.postalCode || '',
+            companyName: contact?.companyName || '',
+            contactId: contact?.id || null,
+        });
     } catch (error) {
         console.error('Get current user error:', error);
         res.status(500).json({ error: 'Internal server error' });

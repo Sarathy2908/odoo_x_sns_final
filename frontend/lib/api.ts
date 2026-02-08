@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://odoo-x-sns-final-git-main-sarathy2908s-projects.vercel.app';
 
 // Get token from localStorage
 const getToken = (): string | null => {

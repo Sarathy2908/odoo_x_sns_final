@@ -75,7 +75,15 @@ export const getSubscription = async (req: AuthRequest, res: Response) => {
                         name: true,
                         email: true,
                         phone: true,
-                        address: true,
+                        contact: {
+                            select: {
+                                street: true,
+                                city: true,
+                                state: true,
+                                country: true,
+                                postalCode: true,
+                            },
+                        },
                     },
                 },
                 contact: true,
