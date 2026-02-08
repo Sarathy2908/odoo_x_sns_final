@@ -13,6 +13,8 @@ export default function PortalPlans() {
     const [showSubscriptions, setShowSubscriptions] = useState(false);
     const [processingPlanId, setProcessingPlanId] = useState<string | null>(null);
     const [razorpayLoaded, setRazorpayLoaded] = useState(false);
+    const [addressMissing, setAddressMissing] = useState(false);
+    const [showAddressModal, setShowAddressModal] = useState(false);
     const { showToast } = useToast();
 
     // Check if Razorpay is already available (e.g. cached by browser)
@@ -24,15 +26,16 @@ export default function PortalPlans() {
 
     const loadData = useCallback(async () => {
         try {
-            const [catalogRes, subsRes] = await Promise.all([
+            const [catalogRes, subsRes, profileRes] = await Promise.all([
                 portalAPI.getCatalog(),
                 portalAPI.getSubscriptions(),
+                portalAPI.getProfile(),
             ]);
             setPlans(catalogRes.plans || []);
             const subs = Array.isArray(subsRes) ? subsRes : subsRes.subscriptions || [];
             setSubscriptions(subs);
-            // Auto-expand subscriptions if user has any
             if (subs.length > 0) setShowSubscriptions(true);
+            setAddressMissing(!profileRes.hasAddress);
         } catch (err) {
             console.error('Failed to load data:', err);
         } finally {
@@ -45,6 +48,12 @@ export default function PortalPlans() {
     }, [loadData]);
 
     const handleSubscribe = async (plan: any) => {
+        // Check address first — block if missing
+        if (addressMissing) {
+            setShowAddressModal(true);
+            return;
+        }
+
         // Check both state and window object directly
         const isRazorpayReady = razorpayLoaded || (typeof window !== 'undefined' && !!window.Razorpay);
         if (!isRazorpayReady) {
@@ -151,6 +160,56 @@ export default function PortalPlans() {
 
             <h1 className="text-xl md:text-2xl font-bold text-gray-900">Plans</h1>
 
+            {/* Address Missing Banner */}
+            {addressMissing && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
+                    <svg className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    <div>
+                        <p className="text-sm font-medium text-amber-800">Address required for subscriptions</p>
+                        <p className="text-xs text-amber-600 mt-1">
+                            Please complete your address in your{' '}
+                            <Link href="/portal/profile" className="underline font-medium hover:text-amber-800">profile page</Link>
+                            {' '}before subscribing to a plan.
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {/* Address Required Modal */}
+            {showAddressModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                    <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                                <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-lg font-semibold text-gray-900">Address Required</h3>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-6">
+                            You need to add your address before subscribing to a plan. Please complete your address details in your profile page and then come back to subscribe.
+                        </p>
+                        <div className="flex items-center gap-3">
+                            <Link
+                                href="/portal/profile"
+                                className="flex-1 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors text-center"
+                            >
+                                Go to Profile
+                            </Link>
+                            <button
+                                onClick={() => setShowAddressModal(false)}
+                                className="flex-1 px-4 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Plans Grid */}
             {plans.length === 0 ? (
                 <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
@@ -171,12 +230,12 @@ export default function PortalPlans() {
                             <div className="flex items-start justify-between mb-1">
                                 <h3 className="font-semibold text-gray-900">{plan.name}</h3>
                                 <span className="text-xs text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                                    {processingPlanId === plan.id ? 'Processing...' : 'Subscribe →'}
+                                    {processingPlanId === plan.id ? 'Processing...' : 'Subscribe \u2192'}
                                 </span>
                             </div>
                             {plan.description && <p className="text-sm text-gray-500 mb-3">{plan.description}</p>}
                             <div className="flex items-baseline gap-1 mb-3">
-                                <span className="text-2xl font-bold text-gray-900">₹{Number(plan.price).toLocaleString('en-IN')}</span>
+                                <span className="text-2xl font-bold text-gray-900">{'\u20B9'}{Number(plan.price).toLocaleString('en-IN')}</span>
                                 <span className="text-sm text-gray-500">{billingLabel(plan.billingPeriod)}</span>
                             </div>
                             <div className="flex flex-wrap gap-2 text-xs">
@@ -236,7 +295,7 @@ export default function PortalPlans() {
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-xl font-bold text-gray-900">₹{Number(sub.recurringTotal).toLocaleString('en-IN')}</p>
+                                        <p className="text-xl font-bold text-gray-900">{'\u20B9'}{Number(sub.recurringTotal).toLocaleString('en-IN')}</p>
                                         <p className="text-sm text-gray-500">/{sub.plan?.billingPeriod?.toLowerCase() || 'month'}</p>
                                     </div>
                                 </div>

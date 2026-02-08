@@ -83,11 +83,6 @@ model User {
   name          String
   role          UserRole @default(PORTAL_USER)
   phone         String?
-  address       String?
-  city          String?
-  state         String?
-  country       String?
-  postalCode    String?
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -96,7 +91,7 @@ model User {
   resetToken    String?
   resetTokenExpiry DateTime?
 
-  // Link to Contact
+  // Link to Contact (address is stored in Contact)
   contactId     String?
   contact       Contact? @relation(fields: [contactId], references: [id])
 

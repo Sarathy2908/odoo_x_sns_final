@@ -182,31 +182,98 @@ export const getMyPayments = async (req: AuthRequest, res: Response) => {
     }
 };
 
-// Update my profile
+// Update my profile (address fields are stored in Contact)
 export const updateProfile = async (req: AuthRequest, res: Response) => {
     try {
-        const { name, phone, address, city, state, country, postalCode } = req.body;
+        const { name, phone, street, street2, city, state, country, postalCode, companyName } = req.body;
+
+        // Update user basic fields
         const user = await prisma.user.update({
             where: { id: req.user!.id },
-            data: { name, phone, address, city, state, country, postalCode },
-            select: { id: true, name: true, email: true, phone: true, address: true, city: true, state: true, country: true, postalCode: true, role: true },
+            data: { name, phone },
+            select: { id: true, name: true, email: true, phone: true, role: true, contactId: true },
         });
-        res.json(user);
+
+        // Update or create the linked Contact with address fields
+        const addressData = { street, street2, city, state, country, postalCode, companyName };
+        if (user.contactId) {
+            await prisma.contact.update({
+                where: { id: user.contactId },
+                data: { name, phone, ...addressData },
+            });
+        } else {
+            const contact = await prisma.contact.create({
+                data: {
+                    name: user.name,
+                    email: user.email,
+                    phone,
+                    contactType: 'INDIVIDUAL',
+                    isCustomer: true,
+                    ...addressData,
+                },
+            });
+            await prisma.user.update({
+                where: { id: user.id },
+                data: { contactId: contact.id },
+            });
+        }
+
+        // Return the updated profile with contact address
+        const updatedUser = await prisma.user.findUnique({
+            where: { id: req.user!.id },
+            select: {
+                id: true, name: true, email: true, phone: true, role: true, createdAt: true,
+                contact: {
+                    select: { id: true, street: true, street2: true, city: true, state: true, country: true, postalCode: true, companyName: true },
+                },
+            },
+        });
+
+        const { contact, ...userData } = updatedUser!;
+        res.json({
+            ...userData,
+            street: contact?.street || '',
+            street2: contact?.street2 || '',
+            city: contact?.city || '',
+            state: contact?.state || '',
+            country: contact?.country || '',
+            postalCode: contact?.postalCode || '',
+            companyName: contact?.companyName || '',
+            contactId: contact?.id || null,
+        });
     } catch (error) {
         console.error('Update profile error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };
 
-// Get my profile
+// Get my profile (address sourced from linked Contact)
 export const getProfile = async (req: AuthRequest, res: Response) => {
     try {
         const user = await prisma.user.findUnique({
             where: { id: req.user!.id },
-            select: { id: true, name: true, email: true, phone: true, address: true, city: true, state: true, country: true, postalCode: true, role: true, createdAt: true },
+            select: {
+                id: true, name: true, email: true, phone: true, role: true, createdAt: true,
+                contact: {
+                    select: { id: true, street: true, street2: true, city: true, state: true, country: true, postalCode: true, companyName: true },
+                },
+            },
         });
         if (!user) return res.status(404).json({ error: 'User not found' });
-        res.json(user);
+
+        const { contact, ...userData } = user;
+        res.json({
+            ...userData,
+            street: contact?.street || '',
+            street2: contact?.street2 || '',
+            city: contact?.city || '',
+            state: contact?.state || '',
+            country: contact?.country || '',
+            postalCode: contact?.postalCode || '',
+            companyName: contact?.companyName || '',
+            contactId: contact?.id || null,
+            hasAddress: !!(contact?.street && contact?.city && contact?.state && contact?.country && contact?.postalCode),
+        });
     } catch (error) {
         console.error('Get profile error:', error);
         res.status(500).json({ error: 'Internal server error' });
@@ -219,6 +286,24 @@ export const subscribeToPlan = async (req: AuthRequest, res: Response) => {
         const { planId, discountCode } = req.body;
         if (!planId) {
             return res.status(400).json({ error: 'Plan ID is required' });
+        }
+
+        // Check if user has a complete address in their Contact
+        const user = await prisma.user.findUnique({
+            where: { id: req.user!.id },
+            select: {
+                contactId: true,
+                contact: {
+                    select: { street: true, city: true, state: true, country: true, postalCode: true },
+                },
+            },
+        });
+
+        if (!user?.contact || !user.contact.street || !user.contact.city || !user.contact.state || !user.contact.country || !user.contact.postalCode) {
+            return res.status(400).json({
+                error: 'Please complete your address in your profile before subscribing.',
+                code: 'ADDRESS_REQUIRED',
+            });
         }
 
         const plan = await prisma.recurringPlan.findUnique({ where: { id: planId } });
@@ -281,11 +366,12 @@ export const subscribeToPlan = async (req: AuthRequest, res: Response) => {
             case 'YEARLY': expirationDate.setFullYear(expirationDate.getFullYear() + 1); break;
         }
 
-        // Create a DRAFT subscription
+        // Create a DRAFT subscription (linked to user's contact)
         const subscription = await prisma.subscription.create({
             data: {
                 subscriptionNumber,
                 customerId: req.user!.id,
+                contactId: user!.contactId,
                 planId,
                 startDate,
                 expirationDate,
