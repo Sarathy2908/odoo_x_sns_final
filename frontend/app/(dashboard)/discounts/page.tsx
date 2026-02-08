@@ -165,9 +165,9 @@ export default function DiscountsPage() {
                   </span>
                 </td>
                 <td className="font-medium">
-                  {discount.type === 'FIXED' ? `$${Number(discount.value).toFixed(2)}` : `${discount.value}%`}
+                  {discount.type === 'FIXED' ? `\u20B9${Number(discount.value).toLocaleString('en-IN')}` : `${discount.value}%`}
                 </td>
-                <td>{discount.minPurchase ? `$${Number(discount.minPurchase).toFixed(2)}` : '-'}</td>
+                <td>{discount.minPurchase ? `\u20B9${Number(discount.minPurchase).toLocaleString('en-IN')}` : '-'}</td>
                 <td>{discount.startDate ? new Date(discount.startDate).toLocaleDateString() : '-'}</td>
                 <td>{discount.endDate ? new Date(discount.endDate).toLocaleDateString() : '-'}</td>
                 <td>

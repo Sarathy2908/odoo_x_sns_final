@@ -36,6 +36,10 @@ export default function PortalCheckout() {
     const [discountError, setDiscountError] = useState('');
     const [validating, setValidating] = useState(false);
 
+    // Price confirmation state
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [confirmInput, setConfirmInput] = useState('');
+
     useEffect(() => {
         const stored = localStorage.getItem('portal_cart');
         if (stored) {
@@ -89,6 +93,26 @@ export default function PortalCheckout() {
         setDiscountError('');
         localStorage.removeItem('portal_discount');
     };
+
+    const handlePayClick = () => {
+        setConfirmInput('');
+        setShowConfirm(true);
+    };
+
+    const handleConfirmPay = () => {
+        const entered = parseFloat(confirmInput.replace(/,/g, ''));
+        if (isNaN(entered) || entered !== total) {
+            return;
+        }
+        setShowConfirm(false);
+        setConfirmInput('');
+        handlePlaceOrder();
+    };
+
+    const isConfirmMatch = (() => {
+        const entered = parseFloat(confirmInput.replace(/,/g, ''));
+        return !isNaN(entered) && entered === total;
+    })();
 
     const handlePlaceOrder = async () => {
         if (typeof window === 'undefined' || !window.Razorpay) {
@@ -244,12 +268,12 @@ export default function PortalCheckout() {
                                             }}
                                             onKeyDown={(e) => e.key === 'Enter' && handleApplyDiscount()}
                                             placeholder="Discount code"
-                                            className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="min-w-0 flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         />
                                         <button
                                             onClick={handleApplyDiscount}
                                             disabled={validating || !discountCode.trim()}
-                                            className="px-3 py-2 text-sm font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="flex-shrink-0 px-3 py-2 text-sm font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             {validating ? '...' : 'Apply'}
                                         </button>
@@ -293,7 +317,7 @@ export default function PortalCheckout() {
                             </div>
                         </div>
                         <button
-                            onClick={handlePlaceOrder}
+                            onClick={handlePayClick}
                             disabled={processing}
                             className="w-full mt-5 px-5 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
@@ -313,6 +337,59 @@ export default function PortalCheckout() {
                     </div>
                 </div>
             </div>
+
+            {/* Price Confirmation Modal */}
+            {showConfirm && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Confirm Payment</h3>
+                        <p className="text-sm text-gray-600 mb-4">
+                            To confirm your purchase, please type the total amount{' '}
+                            <span className="font-bold text-gray-900">{'\u20B9'}{total.toLocaleString('en-IN')}</span>{' '}
+                            in the field below.
+                        </p>
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Enter amount to confirm</label>
+                            <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">{'\u20B9'}</span>
+                                <input
+                                    type="text"
+                                    value={confirmInput}
+                                    onChange={(e) => setConfirmInput(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && isConfirmMatch && handleConfirmPay()}
+                                    placeholder={total.toLocaleString('en-IN')}
+                                    className={`w-full pl-8 pr-3 py-2.5 text-sm border rounded-lg focus:outline-none focus:ring-2 ${
+                                        confirmInput && !isConfirmMatch
+                                            ? 'border-red-300 focus:ring-red-500'
+                                            : isConfirmMatch
+                                            ? 'border-green-300 focus:ring-green-500'
+                                            : 'border-gray-200 focus:ring-blue-500'
+                                    }`}
+                                    autoFocus
+                                />
+                            </div>
+                            {confirmInput && !isConfirmMatch && (
+                                <p className="text-xs text-red-500 mt-1">Amount does not match. Please enter {total.toLocaleString('en-IN')}</p>
+                            )}
+                        </div>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => { setShowConfirm(false); setConfirmInput(''); }}
+                                className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleConfirmPay}
+                                disabled={!isConfirmMatch}
+                                className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Confirm & Pay
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

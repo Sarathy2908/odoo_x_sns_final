@@ -202,7 +202,7 @@ export default function AttributesPage() {
                     const vals = [...formData.values]; vals[i] = { ...vals[i], value: e.target.value };
                     setFormData({ ...formData, values: vals });
                   }} className="form-input flex-1" />
-                  <input type="number" step="0.01" placeholder="Extra $" value={v.extraPrice} onChange={(e) => {
+                  <input type="number" step="0.01" placeholder="Extra \u20B9" value={v.extraPrice} onChange={(e) => {
                     const vals = [...formData.values]; vals[i] = { ...vals[i], extraPrice: e.target.value };
                     setFormData({ ...formData, values: vals });
                   }} className="form-input w-24" />
