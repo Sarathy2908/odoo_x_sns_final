@@ -216,7 +216,7 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
 // Subscribe to a plan — creates subscription + Razorpay order in one step
 export const subscribeToPlan = async (req: AuthRequest, res: Response) => {
     try {
-        const { planId } = req.body;
+        const { planId, discountCode } = req.body;
         if (!planId) {
             return res.status(400).json({ error: 'Plan ID is required' });
         }
@@ -229,6 +229,43 @@ export const subscribeToPlan = async (req: AuthRequest, res: Response) => {
         if (plan.price <= 0) {
             return res.status(400).json({ error: 'Plan has no payable amount' });
         }
+
+        // Validate and calculate discount if code provided
+        let discountId: string | null = null;
+        let discountAmount = 0;
+        let discountName: string | null = null;
+
+        if (discountCode) {
+            const discount = await prisma.discount.findFirst({
+                where: { name: { equals: discountCode, mode: 'insensitive' } },
+            });
+
+            if (discount) {
+                const now = new Date();
+                const isActive = (!discount.startDate || now >= discount.startDate)
+                    && (!discount.endDate || now <= discount.endDate);
+                const isWithinUsageLimit = discount.limitUsage === null
+                    || discount.usageCount < discount.limitUsage;
+                const meetsMinPurchase = !discount.minPurchase
+                    || plan.price >= discount.minPurchase;
+
+                if (isActive && isWithinUsageLimit && meetsMinPurchase) {
+                    discountId = discount.id;
+                    discountName = discount.name;
+                    if (discount.type === 'PERCENTAGE') {
+                        discountAmount = (plan.price * discount.value) / 100;
+                    } else {
+                        discountAmount = discount.value;
+                    }
+                    discountAmount = Math.min(discountAmount, plan.price);
+                    discountAmount = Math.round(discountAmount * 100) / 100;
+                }
+            }
+        }
+
+        const payableSubtotal = plan.price - discountAmount;
+        const gstAmount = Math.round(payableSubtotal * 0.18 * 100) / 100;
+        const payableAmount = Math.round((payableSubtotal + gstAmount) * 100) / 100;
 
         // Generate subscription number
         const count = await prisma.subscription.count();
@@ -254,11 +291,15 @@ export const subscribeToPlan = async (req: AuthRequest, res: Response) => {
                 expirationDate,
                 status: SubscriptionStatus.DRAFT,
                 recurringTotal: plan.price,
+                discountId,
+                discountAmount,
                 history: {
                     create: {
                         action: 'status_change',
                         toStatus: 'DRAFT',
-                        description: 'Subscription created via portal',
+                        description: discountName
+                            ? `Subscription created via portal with discount: ${discountName}`
+                            : 'Subscription created via portal',
                         performedBy: req.user!.id,
                     },
                 },
@@ -267,7 +308,7 @@ export const subscribeToPlan = async (req: AuthRequest, res: Response) => {
 
         // Create Razorpay order
         const order = await createRazorpayOrder(
-            plan.price,
+            payableAmount,
             'INR',
             subscriptionNumber,
             { subscriptionId: subscription.id }
@@ -280,11 +321,19 @@ export const subscribeToPlan = async (req: AuthRequest, res: Response) => {
             where: { id: subscription.id },
             data: {
                 razorpayOrderId: order.id,
-                amountDue: plan.price,
+                amountDue: payableAmount,
                 status: SubscriptionStatus.CONFIRMED,
                 paymentLinkExpiry,
             },
         });
+
+        // Increment discount usage count
+        if (discountId) {
+            await prisma.discount.update({
+                where: { id: discountId },
+                data: { usageCount: { increment: 1 } },
+            });
+        }
 
         await prisma.subscriptionHistory.create({
             data: {
@@ -305,6 +354,8 @@ export const subscribeToPlan = async (req: AuthRequest, res: Response) => {
             key: process.env.RAZORPAY_TEST_API,
             subscriptionNumber,
             planName: plan.name,
+            discountAmount,
+            discountCode: discountName,
         });
     } catch (error) {
         console.error('Subscribe to plan error:', error);

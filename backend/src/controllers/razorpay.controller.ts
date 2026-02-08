@@ -107,6 +107,7 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
                 plan: true,
                 customer: { select: { id: true, name: true, email: true } },
                 lines: { include: { product: true, tax: true } },
+                discount: true,
             },
         });
 
@@ -161,7 +162,16 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
                 });
             }
 
-            const totalAmount = subtotal + taxAmount;
+            // Apply subscription-level discount
+            const invoiceDiscountAmount = updatedSubscription.discountAmount || 0;
+            const discountedSubtotal = subtotal - invoiceDiscountAmount;
+
+            // Recalculate tax on discounted amount for plan-only subscriptions
+            if (updatedSubscription.lines.length === 0 && updatedSubscription.plan) {
+                taxAmount = Math.round(discountedSubtotal * 0.18 * 100) / 100;
+            }
+
+            const totalAmount = discountedSubtotal + taxAmount;
 
             const invoice = await prisma.invoice.create({
                 data: {
@@ -173,6 +183,8 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
                     dueDate: new Date(),
                     status: InvoiceStatus.PAID,
                     subtotal,
+                    discountAmount: invoiceDiscountAmount,
+                    discountCode: updatedSubscription.discount?.name || null,
                     taxAmount,
                     totalAmount,
                     paidAmount: totalAmount,
@@ -205,6 +217,8 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
                     amount: totalAmount,
                     paymentId: razorpay_payment_id,
                     invoiceDate: new Date().toLocaleDateString('en-IN'),
+                    discountAmount: invoiceDiscountAmount || undefined,
+                    discountCode: updatedSubscription.discount?.name || undefined,
                 }).catch(err => console.error('Invoice email error:', err));
             }
 

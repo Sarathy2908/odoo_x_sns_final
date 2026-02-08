@@ -257,6 +257,10 @@ export const discountsAPI = {
     delete: (id: string) => apiRequest(`/discounts/${id}`, {
         method: 'DELETE',
     }),
+    validateCode: (code: string, totalAmount: number) => apiRequest('/discounts/validate', {
+        method: 'POST',
+        body: JSON.stringify({ code, totalAmount }),
+    }),
 };
 
 // Quotations API
@@ -409,8 +413,8 @@ export const portalAPI = {
         method: 'PUT',
         body: JSON.stringify(data),
     }),
-    subscribe: (planId: string) => apiRequest('/portal/subscribe', {
+    subscribe: (planId: string, discountCode?: string) => apiRequest('/portal/subscribe', {
         method: 'POST',
-        body: JSON.stringify({ planId }),
+        body: JSON.stringify({ planId, discountCode }),
     }),
 };

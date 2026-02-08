@@ -76,9 +76,15 @@ export default function PortalInvoiceDetail() {
                 <div className="bg-white rounded-xl border border-gray-200 p-5">
                     <p className="text-xs font-medium text-gray-400 uppercase mb-3">Amounts</p>
                     <div className="space-y-2 text-sm">
-                        <div className="flex justify-between"><span className="text-gray-500">Subtotal</span><span className="font-medium text-gray-900">₹{Number(invoice.subtotal).toLocaleString('en-IN')}</span></div>
-                        <div className="flex justify-between"><span className="text-gray-500">Tax</span><span className="font-medium text-gray-900">₹{Number(invoice.taxAmount || 0).toLocaleString('en-IN')}</span></div>
-                        <div className="flex justify-between border-t border-gray-100 pt-2"><span className="text-gray-700 font-medium">Total</span><span className="text-lg font-bold text-gray-900">₹{Number(invoice.totalAmount).toLocaleString('en-IN')}</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500">Subtotal</span><span className="font-medium text-gray-900">{'\u20B9'}{Number(invoice.subtotal).toLocaleString('en-IN')}</span></div>
+                        {Number(invoice.discountAmount || 0) > 0 && (
+                            <div className="flex justify-between">
+                                <span className="text-green-600">Discount{invoice.discountCode ? ` (${invoice.discountCode})` : ''}</span>
+                                <span className="font-medium text-green-600">-{'\u20B9'}{Number(invoice.discountAmount).toLocaleString('en-IN')}</span>
+                            </div>
+                        )}
+                        <div className="flex justify-between"><span className="text-gray-500">Tax</span><span className="font-medium text-gray-900">{'\u20B9'}{Number(invoice.taxAmount || 0).toLocaleString('en-IN')}</span></div>
+                        <div className="flex justify-between border-t border-gray-100 pt-2"><span className="text-gray-700 font-medium">Total</span><span className="text-lg font-bold text-gray-900">{'\u20B9'}{Number(invoice.totalAmount).toLocaleString('en-IN')}</span></div>
                     </div>
                 </div>
                 <div className="bg-white rounded-xl border border-gray-200 p-5">
@@ -125,15 +131,21 @@ export default function PortalInvoiceDetail() {
                         <tfoot className="border-t border-gray-200">
                             <tr>
                                 <td colSpan={5} className="px-5 py-3 text-right font-medium text-gray-700">Subtotal</td>
-                                <td className="px-5 py-3 text-right font-medium text-gray-900">₹{Number(invoice.subtotal).toLocaleString('en-IN')}</td>
+                                <td className="px-5 py-3 text-right font-medium text-gray-900">{'\u20B9'}{Number(invoice.subtotal).toLocaleString('en-IN')}</td>
                             </tr>
+                            {Number(invoice.discountAmount || 0) > 0 && (
+                                <tr>
+                                    <td colSpan={5} className="px-5 py-2 text-right text-green-600">Discount{invoice.discountCode ? ` (${invoice.discountCode})` : ''}</td>
+                                    <td className="px-5 py-2 text-right font-medium text-green-600">-{'\u20B9'}{Number(invoice.discountAmount).toLocaleString('en-IN')}</td>
+                                </tr>
+                            )}
                             <tr>
                                 <td colSpan={5} className="px-5 py-2 text-right text-gray-500">Tax</td>
-                                <td className="px-5 py-2 text-right text-gray-600">₹{Number(invoice.taxAmount || 0).toLocaleString('en-IN')}</td>
+                                <td className="px-5 py-2 text-right text-gray-600">{'\u20B9'}{Number(invoice.taxAmount || 0).toLocaleString('en-IN')}</td>
                             </tr>
                             <tr className="border-t border-gray-200">
                                 <td colSpan={5} className="px-5 py-3 text-right font-bold text-gray-900">Total</td>
-                                <td className="px-5 py-3 text-right text-lg font-bold text-gray-900">₹{Number(invoice.totalAmount).toLocaleString('en-IN')}</td>
+                                <td className="px-5 py-3 text-right text-lg font-bold text-gray-900">{'\u20B9'}{Number(invoice.totalAmount).toLocaleString('en-IN')}</td>
                             </tr>
                         </tfoot>
                     </table>
