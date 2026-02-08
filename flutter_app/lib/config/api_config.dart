@@ -28,6 +28,7 @@ class ApiConfig {
 
   // Discounts
   static const String discounts = '/discounts';
+  static const String discountValidate = '/discounts/validate';
 
   // Taxes
   static const String taxes = '/taxes';
