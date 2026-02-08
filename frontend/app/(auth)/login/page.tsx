@@ -36,9 +36,28 @@ function LoginContent() {
         setLoading(true);
         try {
             const response = await authAPI.login(formData);
+
+            // Validate role matches selected login type
+            const userRole = response.user.role;
+            if (role === 'admin' && userRole !== 'ADMIN') {
+                setError('This account does not have admin access. Please use the correct login page.');
+                setLoading(false);
+                return;
+            }
+            if (role === 'internal' && userRole !== 'INTERNAL_USER') {
+                setError('This account does not have internal user access. Please use the correct login page.');
+                setLoading(false);
+                return;
+            }
+            if (role === 'portal' && userRole !== 'PORTAL_USER') {
+                setError('This account does not have portal user access. Please use the correct login page.');
+                setLoading(false);
+                return;
+            }
+
             setToken(response.token);
             setUser(response.user);
-            if (response.user.role === 'PORTAL_USER') {
+            if (userRole === 'PORTAL_USER') {
                 router.push('/portal/catalog');
             } else {
                 router.push('/dashboard');

@@ -41,13 +41,22 @@ export default function PortalCheckout() {
         if (stored) {
             try { setItems(JSON.parse(stored)); } catch { setItems([]); }
         }
+        // Load discount from cart page if previously applied
+        const storedDiscount = localStorage.getItem('portal_discount');
+        if (storedDiscount) {
+            try {
+                const parsed = JSON.parse(storedDiscount);
+                setAppliedDiscount(parsed);
+                setDiscountCode(parsed.name);
+            } catch { /* ignore */ }
+        }
     }, []);
 
     const subtotal = items.reduce((sum, item) => sum + item.amount * item.quantity, 0);
     const discountAmount = appliedDiscount?.discountAmount || 0;
     const discountedSubtotal = subtotal - discountAmount;
-    const tax = Math.round(discountedSubtotal * 0.18);
-    const total = discountedSubtotal + tax;
+    const tax = Math.round(discountedSubtotal * 0.18 * 100) / 100;
+    const total = Math.round((discountedSubtotal + tax) * 100) / 100;
 
     const handleApplyDiscount = async () => {
         if (!discountCode.trim()) return;
@@ -55,17 +64,20 @@ export default function PortalCheckout() {
         setDiscountError('');
         try {
             const result = await discountsAPI.validateCode(discountCode.trim(), subtotal);
-            setAppliedDiscount({
+            const discount = {
                 id: result.discount.id,
                 name: result.discount.name,
                 type: result.discount.type,
                 value: result.discount.value,
                 description: result.discount.description,
                 discountAmount: result.discountAmount,
-            });
+            };
+            setAppliedDiscount(discount);
+            localStorage.setItem('portal_discount', JSON.stringify(discount));
         } catch (err: any) {
             setDiscountError(err.message || 'Invalid discount code');
             setAppliedDiscount(null);
+            localStorage.removeItem('portal_discount');
         } finally {
             setValidating(false);
         }
@@ -75,6 +87,7 @@ export default function PortalCheckout() {
         setAppliedDiscount(null);
         setDiscountCode('');
         setDiscountError('');
+        localStorage.removeItem('portal_discount');
     };
 
     const handlePlaceOrder = async () => {
@@ -108,6 +121,7 @@ export default function PortalCheckout() {
                             razorpay_signature: response.razorpay_signature,
                         });
                         localStorage.removeItem('portal_cart');
+                        localStorage.removeItem('portal_discount');
                         router.push('/portal/confirmation');
                     } catch (err: any) {
                         setError(err.message || 'Payment verification failed');

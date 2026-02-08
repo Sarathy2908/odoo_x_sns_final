@@ -118,6 +118,75 @@ export const updateDiscount = async (req: AuthRequest, res: Response) => {
     }
 };
 
+// Validate discount code (any authenticated user)
+export const validateDiscountCode = async (req: AuthRequest, res: Response) => {
+    try {
+        const { code, totalAmount } = req.body;
+
+        if (!code) {
+            return res.status(400).json({ error: 'Discount code is required' });
+        }
+
+        const discount = await prisma.discount.findFirst({
+            where: {
+                name: { equals: code, mode: 'insensitive' },
+            },
+        });
+
+        if (!discount) {
+            return res.status(404).json({ error: 'Invalid discount code' });
+        }
+
+        // Check date validity
+        const now = new Date();
+        if (discount.startDate && now < discount.startDate) {
+            return res.status(400).json({ error: 'Discount code is not yet active' });
+        }
+        if (discount.endDate && now > discount.endDate) {
+            return res.status(400).json({ error: 'Discount code has expired' });
+        }
+
+        // Check usage limit
+        if (discount.limitUsage !== null && discount.usageCount >= discount.limitUsage) {
+            return res.status(400).json({ error: 'Discount code usage limit reached' });
+        }
+
+        // Check minimum purchase
+        const amount = totalAmount ? parseFloat(totalAmount) : 0;
+        if (discount.minPurchase && amount < discount.minPurchase) {
+            return res.status(400).json({
+                error: `Minimum purchase of ₹${discount.minPurchase} required`,
+            });
+        }
+
+        // Calculate discount amount
+        let discountAmount = 0;
+        if (discount.type === 'PERCENTAGE') {
+            discountAmount = (amount * discount.value) / 100;
+        } else {
+            discountAmount = discount.value;
+        }
+        // Discount cannot exceed total
+        discountAmount = Math.min(discountAmount, amount);
+
+        res.json({
+            valid: true,
+            discount: {
+                id: discount.id,
+                name: discount.name,
+                type: discount.type,
+                value: discount.value,
+                description: discount.description,
+            },
+            discountAmount: Math.round(discountAmount * 100) / 100,
+            finalAmount: Math.round((amount - discountAmount) * 100) / 100,
+        });
+    } catch (error) {
+        console.error('Validate discount error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
 // Delete discount (Admin only)
 export const deleteDiscount = async (req: AuthRequest, res: Response) => {
     try {
