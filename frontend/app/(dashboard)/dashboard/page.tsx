@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { reportsAPI } from '@/lib/api';
+import { reportsAPI, churnAPI } from '@/lib/api';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
 import StatusBadge from '@/app/components/StatusBadge';
 
 export default function DashboardPage() {
   const [metrics, setMetrics] = useState<any>(null);
+  const [atRiskSubs, setAtRiskSubs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -17,8 +18,12 @@ export default function DashboardPage() {
 
   const loadMetrics = async () => {
     try {
-      const data = await reportsAPI.getDashboard();
+      const [data, atRisk] = await Promise.all([
+        reportsAPI.getDashboard(),
+        churnAPI.getAtRisk().catch(() => []),
+      ]);
       setMetrics(data);
+      setAtRiskSubs(Array.isArray(atRisk) ? atRisk : []);
     } catch (error) {
       console.error('Failed to load metrics:', error);
     } finally {
@@ -66,6 +71,13 @@ export default function DashboardPage() {
       iconBg: 'bg-indigo-50 text-indigo-600',
       icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />,
     },
+    {
+      title: 'At-Risk Subscriptions',
+      value: atRiskSubs.length,
+      borderColor: 'border-l-orange-500',
+      iconBg: 'bg-orange-50 text-orange-600',
+      icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />,
+    },
   ];
 
   // Subscription status breakdown
@@ -86,7 +98,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Metric Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
         {cards.map((card, index) => (
           <div
             key={index}
@@ -256,6 +268,45 @@ export default function DashboardPage() {
                 {'\u20B9'}{(metrics.monthlyRevenue.lastMonth || 0).toLocaleString('en-IN')}
               </p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* At-Risk Subscriptions */}
+      {atRiskSubs.length > 0 && (
+        <div className="card p-4 md:p-6">
+          <div className="flex items-center justify-between mb-3 md:mb-4">
+            <h2 className="text-base md:text-lg font-semibold text-gray-900">At-Risk Subscriptions</h2>
+            <button
+              onClick={() => router.push('/subscriptions')}
+              className="text-sm text-primary hover:underline"
+            >
+              View all
+            </button>
+          </div>
+          <div className="space-y-3">
+            {atRiskSubs.slice(0, 5).map((sub: any) => (
+              <div
+                key={sub.id}
+                onClick={() => router.push(`/subscriptions/${sub.id}`)}
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{sub.subscriptionNumber}</p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {sub.customerName} &middot; {sub.planName}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 ml-3">
+                  {sub.churnFactors?.[0] && (
+                    <span className="text-xs text-gray-500 hidden sm:inline">{sub.churnFactors[0].factor}</span>
+                  )}
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                    sub.churnRisk === 'Critical Risk' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'
+                  }`}>{sub.churnRisk}</span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}

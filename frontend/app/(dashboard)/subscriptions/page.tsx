@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { subscriptionsAPI, plansAPI } from '@/lib/api';
+import { subscriptionsAPI, plansAPI, churnAPI } from '@/lib/api';
 import StatusBadge from '@/app/components/StatusBadge';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
 import FormModal from '@/app/components/FormModal';
@@ -14,6 +14,7 @@ const STATUS_TABS = [
   { key: 'CONFIRMED', label: 'Confirmed' },
   { key: 'ACTIVE', label: 'Active' },
   { key: 'CLOSED', label: 'Closed' },
+  { key: 'AT_RISK', label: 'At Risk' },
 ];
 
 export default function SubscriptionsPage() {
@@ -29,6 +30,7 @@ export default function SubscriptionsPage() {
     price: '',
     billingPeriod: 'MONTHLY',
   });
+  const [runningChurn, setRunningChurn] = useState(false);
   const router = useRouter();
   const { showToast } = useToast();
 
@@ -70,13 +72,31 @@ export default function SubscriptionsPage() {
     }
   };
 
+  const handleRunChurnAnalysis = async () => {
+    setRunningChurn(true);
+    try {
+      const result = await churnAPI.predictAll();
+      showToast(result.message || 'Churn analysis completed', 'success');
+      loadSubscriptions();
+    } catch (error: any) {
+      showToast(error.message || 'Failed to run churn analysis', 'error');
+    } finally {
+      setRunningChurn(false);
+    }
+  };
+
   const statusCounts = subscriptions.reduce((acc: Record<string, number>, sub) => {
     acc[sub.status] = (acc[sub.status] || 0) + 1;
     return acc;
   }, {});
 
+  const atRiskCount = subscriptions.filter(sub =>
+    sub.churnRisk === 'High Risk' || sub.churnRisk === 'Critical Risk'
+  ).length;
+
   const filteredSubscriptions = subscriptions.filter((sub) => {
-    const matchesTab = activeTab === 'ALL' || sub.status === activeTab;
+    const matchesTab = activeTab === 'ALL'
+      || (activeTab === 'AT_RISK' ? (sub.churnRisk === 'High Risk' || sub.churnRisk === 'Critical Risk') : sub.status === activeTab);
     const matchesSearch =
       !search ||
       sub.subscriptionNumber?.toLowerCase().includes(search.toLowerCase()) ||
@@ -95,6 +115,17 @@ export default function SubscriptionsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <h1 className="text-xl md:text-2xl font-bold text-gray-900">Subscriptions</h1>
         <div className="flex items-center gap-2">
+          <button
+            onClick={handleRunChurnAnalysis}
+            disabled={runningChurn}
+            className="btn-secondary text-xs sm:text-sm"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <span className="hidden sm:inline">{runningChurn ? 'Analyzing...' : 'Churn Analysis'}</span>
+            <span className="sm:hidden">{runningChurn ? '...' : 'Churn'}</span>
+          </button>
           <button
             onClick={() => setShowPlanModal(true)}
             className="btn-secondary text-xs sm:text-sm"
@@ -122,7 +153,7 @@ export default function SubscriptionsPage() {
       <div className="border-b border-gray-200">
         <nav className="flex gap-0 -mb-px overflow-x-auto">
           {STATUS_TABS.map((tab) => {
-            const count = tab.key === 'ALL' ? subscriptions.length : (statusCounts[tab.key] || 0);
+            const count = tab.key === 'ALL' ? subscriptions.length : tab.key === 'AT_RISK' ? atRiskCount : (statusCounts[tab.key] || 0);
             const isActive = activeTab === tab.key;
             return (
               <button
@@ -173,6 +204,7 @@ export default function SubscriptionsPage() {
               <th>Expiration</th>
               <th>Payment Terms</th>
               <th>Status</th>
+              <th>Churn Risk</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -206,6 +238,19 @@ export default function SubscriptionsPage() {
                 <td className="text-gray-500 text-sm">{sub.paymentTerms || '-'}</td>
                 <td><StatusBadge status={sub.status} /></td>
                 <td>
+                  {sub.churnRisk ? (
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                      sub.churnRisk === 'Low Risk' ? 'bg-emerald-100 text-emerald-700' :
+                      sub.churnRisk === 'Moderate Risk' ? 'bg-yellow-100 text-yellow-700' :
+                      sub.churnRisk === 'High Risk' ? 'bg-orange-100 text-orange-700' :
+                      sub.churnRisk === 'Critical Risk' ? 'bg-red-100 text-red-700' :
+                      'bg-gray-100 text-gray-500'
+                    }`}>{sub.churnRisk}</span>
+                  ) : (
+                    <span className="text-xs text-gray-400">-</span>
+                  )}
+                </td>
+                <td>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -220,7 +265,7 @@ export default function SubscriptionsPage() {
             ))}
             {filteredSubscriptions.length === 0 && (
               <tr>
-                <td colSpan={8} className="text-center py-12">
+                <td colSpan={9} className="text-center py-12">
                   <div className="flex flex-col items-center gap-2">
                     <svg className="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />

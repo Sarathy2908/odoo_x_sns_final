@@ -27,6 +27,20 @@ class DashboardShell extends StatefulWidget {
 class _DashboardShellState extends State<DashboardShell> {
   int _selectedIndex = 0;
 
+  @override
+  void initState() {
+    super.initState();
+    // Role guard: redirect portal users away from dashboard
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = context.read<AuthProvider>().user;
+      if (user == null) {
+        Navigator.pushNamedAndRemoveUntil(context, '/role-selection', (_) => false);
+      } else if (user.isPortal) {
+        Navigator.pushNamedAndRemoveUntil(context, '/portal', (_) => false);
+      }
+    });
+  }
+
   static const _menuItems = [
     _MenuItem('Dashboard', Icons.dashboard),
     _MenuItem('Contacts', Icons.people),
@@ -273,7 +287,7 @@ class _DashboardShellState extends State<DashboardShell> {
         onTap: () async {
           await context.read<AuthProvider>().logout();
           if (context.mounted) {
-            Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+            Navigator.of(context).pushNamedAndRemoveUntil('/role-selection', (route) => false);
           }
         },
       ),

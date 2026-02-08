@@ -328,6 +328,14 @@ export const reportsAPI = {
     getOverdueInvoices: () => apiRequest('/reports/overdue-invoices'),
 };
 
+// Churn Prediction API
+export const churnAPI = {
+    train: () => apiRequest('/churn/train', { method: 'POST' }),
+    predict: (subscriptionId: string) => apiRequest(`/churn/predict/${subscriptionId}`),
+    predictAll: () => apiRequest('/churn/predict-all', { method: 'POST' }),
+    getAtRisk: () => apiRequest('/churn/at-risk'),
+};
+
 // Razorpay API
 export const razorpayAPI = {
     createOrder: (subscriptionId: string) => apiRequest('/razorpay/create-order', {

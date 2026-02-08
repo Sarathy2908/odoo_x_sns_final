@@ -21,6 +21,7 @@ import contactsRoutes from './routes/contacts.routes';
 import attributesRoutes from './routes/attributes.routes';
 import pdfRoutes from './routes/pdf.routes';
 import portalRoutes from './routes/portal.routes';
+import churnRoutes from './routes/churn.routes';
 
 // Load environment variables
 dotenv.config();
@@ -76,6 +77,7 @@ app.use('/api/contacts', contactsRoutes);
 app.use('/api/attributes', attributesRoutes);
 app.use('/api/pdf', pdfRoutes);
 app.use('/api/portal', portalRoutes);
+app.use('/api/churn', churnRoutes);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

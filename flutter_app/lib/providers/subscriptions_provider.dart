@@ -95,7 +95,7 @@ class SubscriptionsProvider extends ChangeNotifier {
 
   Future<bool> createFromTemplate(String templateId, Map<String, dynamic> data) async {
     try {
-      await _api.post('${ApiConfig.subscriptions}/from-template/$templateId', data: data);
+      await _api.post('${ApiConfig.quotations}/$templateId/create-subscription', data: data);
       await fetchAll();
       return true;
     } catch (e) {
