@@ -177,7 +177,7 @@ export default function PlansPage() {
             {plans.map((plan) => (
               <tr key={plan.id}>
                 <td className="font-medium text-gray-900">{plan.name}</td>
-                <td>${Number(plan.price).toFixed(2)}</td>
+                <td>{'\u20B9'}{Number(plan.price).toLocaleString('en-IN')}</td>
                 <td>{periodBadge(plan.billingPeriod)}</td>
                 <td>{plan.minQuantity || 1}</td>
                 <td>{plan.startDate ? new Date(plan.startDate).toLocaleDateString() : '-'}</td>
