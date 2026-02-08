@@ -331,7 +331,7 @@ class _QuotationsScreenState extends State<QuotationsScreen> {
                   final provider = context.read<SubscriptionsProvider>();
                   final success = await provider.createFromTemplate(
                     template.id,
-                    {'contactId': selectedContactId},
+                    {'customerId': selectedContactId},
                   );
                   if (success && context.mounted) {
                     Navigator.pop(context);

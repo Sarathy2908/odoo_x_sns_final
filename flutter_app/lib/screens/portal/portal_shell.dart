@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../config/theme.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
 import 'portal_home_screen.dart';
 import 'portal_subscriptions_screen.dart';
@@ -17,6 +18,20 @@ class PortalShell extends StatefulWidget {
 class _PortalShellState extends State<PortalShell> {
   int _currentIndex = 0;
   final _titles = ['Home', 'Subscriptions', 'Invoices', 'Profile'];
+
+  @override
+  void initState() {
+    super.initState();
+    // Role guard: redirect dashboard users away from portal
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = context.read<AuthProvider>().user;
+      if (user == null) {
+        Navigator.pushNamedAndRemoveUntil(context, '/role-selection', (_) => false);
+      } else if (user.isDashboardUser) {
+        Navigator.pushNamedAndRemoveUntil(context, '/dashboard', (_) => false);
+      }
+    });
+  }
 
   final _screens = const [
     PortalHomeScreen(),

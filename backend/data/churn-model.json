@@ -1,0 +1,46 @@
+{
+  "weights": [
+    [
+      0.8,
+      0.5,
+      -0.3,
+      0.1,
+      0.7,
+      0.3,
+      0.6
+    ]
+  ],
+  "intercept": [],
+  "normalization": {
+    "min": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "max": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "featureKeys": [
+    "failed_payments_count",
+    "days_since_last_activity",
+    "tenure_in_months",
+    "discount_used_times",
+    "plan_downgrades_count",
+    "is_monthly_plan",
+    "average_payment_delay_days"
+  ],
+  "trainedAt": "2026-02-08T04:02:40.688Z",
+  "sampleCount": 5,
+  "accuracy": 1
+}

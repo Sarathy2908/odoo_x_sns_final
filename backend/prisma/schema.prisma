@@ -326,6 +326,12 @@ model Subscription {
   // Notes
   internalNotes     String?
 
+  // Churn prediction
+  churnRisk        String?    // "Low Risk", "Moderate Risk", "High Risk", "Critical Risk"
+  churnScore       Float?     // 0.0-1.0 probability (stored internally, displayed as text)
+  churnFactors     String?    // JSON string of contributing factors
+  lastChurnCheck   DateTime?  // When churn was last calculated
+
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 

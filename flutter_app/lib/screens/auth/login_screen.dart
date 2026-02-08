@@ -40,6 +40,33 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (success) {
       final user = auth.user!;
+      final selectedRole = ModalRoute.of(context)?.settings.arguments as String?;
+      final isPortalPath = selectedRole == 'portal';
+
+      // Validate role matches the selected login path
+      if (isPortalPath && user.isDashboardUser) {
+        await auth.logout();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('This is an Admin/Internal account. Please use the Admin login.'),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+        return;
+      }
+      if (!isPortalPath && user.isPortal) {
+        await auth.logout();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('This is a Portal account. Please use the Portal login.'),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+        return;
+      }
+
       if (user.isDashboardUser) {
         Navigator.pushNamedAndRemoveUntil(context, '/dashboard', (_) => false);
       } else {
